@@ -1,0 +1,283 @@
+
+<!-- ════ INTRO CHAOS OVERLAY ════ -->
+<div id="chaos-intro">
+  <div class="ci-ambient ci-ambient-1"></div>
+  <div class="ci-ambient ci-ambient-2"></div>
+  <div class="ci-grid"></div>
+  <div class="chaos-hud" id="chaosHUD">
+    <div><div class="ch-hud-num" id="hdUnread">0</div><div class="ch-hud-label">Unread</div></div>
+    <div class="ch-hud-sep"></div>
+    <div><div class="ch-hud-num" id="hdDeadlines">0</div><div class="ch-hud-label">Deadlines</div></div>
+    <div class="ch-hud-sep"></div>
+    <div><div class="ch-hud-num" id="hdPlatforms">0</div><div class="ch-hud-label">Platforms</div></div>
+  </div>
+  <div id="ciCards"></div>
+  <div class="ci-thread" id="ciThread" aria-live="polite">
+    <div class="ci-thread-head">
+      <div class="ci-thread-avatar">J</div>
+      <span class="ci-thread-name">Jake</span>
+    </div>
+    <div class="ci-thread-msgs" id="ciThreadMsgs"></div>
+    <div class="ci-thread-compose" id="ciThreadCompose">
+      <div class="ci-compose-field empty" id="ciComposeField"><span class="ci-compose-cursor" id="ciComposeCursor"></span></div>
+      <div class="ci-compose-send">↑</div>
+    </div>
+  </div>
+  <div class="ci-caption">
+    <div class="ci-caption-line" id="ciLine1"></div>
+    <div class="ci-caption-sub" id="ciLine2"></div>
+  </div>
+  <div class="chaos-veil" id="chaosVeil"></div>
+  <div id="irisSparkFlash" aria-hidden="true"></div>
+  <svg id="sequenceSvg" aria-hidden="true"></svg>
+  <div id="sequenceParticles" aria-hidden="true"></div>
+  <div id="sequenceCore" aria-hidden="true"></div>
+  <p id="sequenceBeat" class="seq-beat" aria-hidden="true"></p>
+  <div class="ci-skip" id="ciSkip">skip</div>
+</div>
+
+<!-- ════ NAV ════ -->
+<nav id="main-nav">
+  <a href="#" class="nav-logo">
+    <span class="nav-logo-mark"><img src="/iris-logo-tile.png" alt="Iris" class="brand-logo-img"></span>Iris
+  </a>
+  <ul class="nav-links">
+    <li><a href="#connected">How it works</a></li>
+    <li><a href="#goals">Your goals</a></li>
+    <li><a href="#messages">Messaging</a></li>
+    <li><a href="#features">Features</a></li>
+  </ul>
+  <a href="/sign-up" class="nav-cta">Get early access →</a>
+</nav>
+
+<!-- ════ OPENING: SET GOALS ════ -->
+<section id="create-iris">
+  <div class="create-mesh" aria-hidden="true">
+    <div class="create-mesh-blob create-mesh-blob-1"></div>
+    <div class="create-mesh-blob create-mesh-blob-2"></div>
+    <div class="create-mesh-blob create-mesh-blob-3"></div>
+  </div>
+  <div class="ci-grid-bg"></div>
+  <div class="create-inner create-inner-wide">
+    <div class="create-copy-stack" id="heroAnswer">
+      <div class="hero-chaos-rail" id="heroChaosRail" aria-hidden="true"></div>
+      <div class="hero-process" id="heroProcess" aria-hidden="true">
+        <span class="hero-step" data-step="scan">Scan</span>
+        <span class="hero-step-line" data-line="1"></span>
+        <span class="hero-step" data-step="sort">Sort</span>
+        <span class="hero-step-line" data-line="2"></span>
+        <span class="hero-step" data-step="hub">Hub</span>
+      </div>
+      <h2 class="create-headline">
+        <div class="headline-copy">
+          <span class="headline-lead" id="heroLead"></span>
+          <span class="headline-sentence" id="heroSentence"></span>
+        </div>
+        <div class="hero-reel-wrap" id="heroReelWrap" aria-hidden="true">
+          <div class="hero-reel-prism" id="heroReelPrism">
+            <div class="hero-reel-viewport" id="heroReelViewport">
+              <div class="hero-reel-track" id="heroReelTrack"></div>
+            </div>
+          </div>
+        </div>
+      </h2>
+    </div>
+
+    <div class="create-product-stage ci-enter">
+      <div class="iris-cmd-window" id="icwCard">
+        <div class="icw-topbar">
+          <div class="icw-orb"><img src="/iris-logo-tile.png" alt="Iris" class="brand-logo-img"></div>
+          <div class="icw-topbar-meta">
+            <div class="icw-name">Iris</div>
+            <div class="icw-activity" id="icwActivity">
+              <span class="icw-activity-dot"></span>
+              <span id="icwActivityText">Ready</span>
+            </div>
+          </div>
+          <div class="icw-kbd-hint" aria-hidden="true"><kbd>⌘</kbd><kbd>K</kbd></div>
+        </div>
+        <div class="icw-search">
+          <svg class="icw-search-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <div class="icw-search-text placeholder" id="icwSearchText">Ask Iris anything…</div>
+        </div>
+        <div class="icw-suggestions" id="icwSuggestions"></div>
+        <div class="icw-demo-panel" id="icwDemoPanel">
+          <div class="icw-demo-label">Iris</div>
+          <div class="icw-iris-resp-wrap" id="icwRespWrap">
+            <div class="icw-iris-resp" id="icwIrisResp"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="create-cta-row ci-enter" style="margin-top:28px;">
+      <a href="/sign-up" class="btn-pill-black">Get early access →</a>
+      <a href="#connected" class="btn-pill-outline">See how it works</a>
+    </div>
+  </div>
+</section>
+
+<!-- hero removed -->
+
+<!-- ════ INTEGRATIONS ════ -->
+<section class="sec sec-light" id="connected">
+  <div class="max">
+    <div class="sec-intro reveal">
+      <span class="eyebrow eyebrow-ink">The shift</span>
+      <h2 class="headline-xl" style="color:#000">You already have every tool.<br>You're just drowning in them.</h2>
+      <p class="sec-sub sec-sub-light">Canvas. Gmail. Google Calendar. Discord. Slack. Handshake. Plus club boards, professor emails, and research portals. Iris reads all of it and gives you one calm answer: <em>here's what matters today.</em></p>
+    </div>
+
+    <div class="shift-visual-wrap reveal reveal-delay-1">
+      <div class="shift-visual-card">
+        <div class="shift-arena-glow" aria-hidden="true"></div>
+        <div class="shift-arena" id="shiftArena">
+          <svg class="shift-graph" id="shiftGraph" aria-hidden="true"></svg>
+          <div class="shift-particles" id="shiftParticles" aria-hidden="true"></div>
+          <div class="shift-nodes" id="shiftNodes"></div>
+
+          <div class="shift-hub" id="shiftHub">
+            <div class="shift-hub-panel">
+              <div class="shift-hub-mark"><img src="/iris-logo-tile.png" alt="Iris" class="brand-logo-img"></div>
+              <div class="shift-hub-title">Iris</div>
+              <div class="shift-hub-sub" id="shiftHubSub">Connects everything you already use</div>
+            </div>
+          </div>
+
+          <p class="shift-iris-status" id="shiftIrisStatus">Linking your apps...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="integrations-note integrations-note-light reveal reveal-delay-2">
+      <p style="font-size:13px;">Every app you already use, all connected</p>
+      <div class="integration-chips integration-chips-light" id="shiftInfra"></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ════ MESSAGES ════ -->
+<section class="sec sec-ink" id="messages">
+  <div class="max">
+    <div class="messages-intro reveal">
+      <span class="eyebrow eyebrow-blue">Texts you like a person</span>
+      <h2 class="headline-lg" style="color:#fff;letter-spacing:-1.5px;">Your semester brain<br>is one message away.</h2>
+      <p class="sec-sub sec-sub-dark" style="margin:16px auto 0;">No app to open. No dashboard to check. Iris slides into your Messages, tells you what matters, and listens when you reply. Cancel a meeting. Change your plan. Just text it.</p>
+    </div>
+    <div class="messages-phone-wrap reveal reveal-delay-2" id="phoneWrap">
+      <div class="messages-phone" id="messagesPhone">
+        <div class="phone-notch"><div class="phone-camera"></div></div>
+        <div class="messages-screen">
+          <div class="messages-header-bar">
+            <div class="messages-contact-avatar"><img src="/iris-logo-tile.png" alt="Iris" class="brand-logo-img"></div>
+            <div>
+              <div class="messages-contact-name">Iris</div>
+              <div class="messages-contact-sub">AI · responds instantly</div>
+            </div>
+          </div>
+          <div class="chat-area" id="chatArea"></div>
+          <div class="message-input-bar">
+            <div class="message-input-text">Ask Iris anything...</div>
+            <div class="message-send">↑</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="integrations-note reveal reveal-delay-3">
+      <p style="font-size:13px;color:rgba(255,255,255,.35);">Works with your existing apps. No new accounts.</p>
+      <div class="integration-chips">
+        <span class="integration-chip">💬 iMessage</span>
+        <span class="integration-chip">📱 SMS</span>
+        <span class="integration-chip">✉️ Gmail</span>
+        <span class="integration-chip">📅 Google Calendar</span>
+        <span class="integration-chip">📚 Canvas</span>
+        <span class="integration-chip">💬 Discord <span style="font-size:10px;opacity:.4;">soon</span></span>
+        <span class="integration-chip">🔵 Slack <span style="font-size:10px;opacity:.4;">soon</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ FEATURES BENTO ════ -->
+<section class="sec sec-parchment" id="features">
+  <div class="max-wide">
+    <div style="text-align:center;margin-bottom:72px;" class="reveal">
+      <span class="eyebrow eyebrow-ink">Built for you specifically</span>
+      <h2 class="headline-lg" style="color:#000;margin-bottom:20px;">Your assistant.<br>Your priorities.</h2>
+      <!-- Interactive goal input demo -->
+      <div style="max-width:560px;margin:0 auto;" id="goalInputDemo">
+        <div style="background:#fff;border:1.5px solid #e0e0e0;border-radius:14px;padding:18px 22px;text-align:left;box-shadow:0 2px 16px rgba(0,0,0,.06);">
+          <div style="font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#bbb;margin-bottom:10px;">Tell Iris your goal</div>
+          <div style="font-size:16px;font-weight:500;color:#1d1d1f;min-height:1.4em;" id="goalDemoText"><span id="goalDemoCursor" style="display:inline-block;width:2px;height:1em;background:#5645d4;vertical-align:middle;margin-left:1px;border-radius:1px;animation:blink 1s step-end infinite;"></span></div>
+        </div>
+        <div id="goalDemoResponse" style="margin-top:10px;background:#f9f9f9;border:1px solid #eee;border-radius:12px;padding:16px 20px;text-align:left;opacity:0;transition:opacity .4s;">
+          <div style="font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:#5645d4;margin-bottom:8px;">Iris adjusts</div>
+          <div style="font-size:13px;color:#515154;line-height:1.6;" id="goalDemoResponseText"></div>
+        </div>
+      </div>
+    </div>
+    <div class="bento">
+      <div class="bento-card large dark reveal">
+        <div class="bento-large-inner">
+          <div>
+            <span class="bento-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18h18"/><path d="M7.5 18a4.5 4.5 0 0 1 9 0"/><path d="M12 3.5v3"/><path d="M5 8l1.6 1.6"/><path d="M19 8l-1.6 1.6"/><path d="M1.5 13.5H3"/><path d="M21 13.5h1.5"/></svg></span>
+            <div class="bento-title bento-title-dark">Before you open your eyes, it's handled.</div>
+            <p class="bento-desc bento-desc-dark" style="margin-top:8px;">Three sentences. Everything that matters. Every morning. Before you open a single app.</p>
+          </div>
+          <div class="bento-timeline">
+            <div class="timeline-item"><div class="timeline-dot timeline-dot-purple"></div><div class="timeline-time">7:42</div><div class="timeline-text" style="color:rgba(255,255,255,.7)">Briefing delivered · 3 priorities</div></div>
+            <div class="timeline-item"><div class="timeline-dot timeline-dot-blue"></div><div class="timeline-time">9:00</div><div class="timeline-text" style="color:rgba(255,255,255,.7)">OA draft reviewed & sent</div></div>
+            <div class="timeline-item"><div class="timeline-dot timeline-dot-green"></div><div class="timeline-time">3:00</div><div class="timeline-text" style="color:rgba(255,255,255,.7)">Interview prep · DND on</div></div>
+            <div class="timeline-item"><div class="timeline-dot timeline-dot-orange"></div><div class="timeline-time">9:00</div><div class="timeline-text" style="color:rgba(255,255,255,.7)">Stats HW · knocked out by 10:30</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="bento-card purple reveal reveal-delay-1">
+        <span class="bento-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/></svg></span>
+        <div class="bento-title bento-title-ink">Lecture notes, already done.</div>
+        <p class="bento-desc bento-desc-ink">Every recording on Canvas gets turned into clean notes, tagged to the right assignment and flagged if it's on the exam.</p>
+      </div>
+      <div class="bento-card teal reveal reveal-delay-1">
+        <span class="bento-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/></svg></span>
+        <div class="bento-title bento-title-ink">Knows urgent from important.</div>
+        <p class="bento-desc bento-desc-ink">A 2% quiz and a recruiter reply feel equal at midnight. Iris weights them correctly. You do the right thing first.</p>
+      </div>
+      <div class="bento-card peach reveal reveal-delay-2">
+        <span class="bento-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19.07 4.93a10 10 0 1 0 .01 14.14"/><path d="M15.54 8.46a5 5 0 1 0 .01 7.08"/><path d="M12 12 20 4"/><circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none"/></svg></span>
+        <div class="bento-title bento-title-ink">Recruiting radar, always on.</div>
+        <p class="bento-desc bento-desc-ink">OA windows, interview invites, and recruiter emails get flagged before the 48 hour window closes. Nothing slips.</p>
+      </div>
+      <div class="bento-card sky reveal reveal-delay-2">
+        <span class="bento-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18"/><path d="M8 2.5v4"/><path d="M16 2.5v4"/></svg></span>
+        <div class="bento-title bento-title-ink">Sees the crunch before it hits.</div>
+        <p class="bento-desc bento-desc-ink">Three deadlines landing in 48 hours? Iris spots it Wednesday. Fixes it Thursday. You never notice.</p>
+      </div>
+      <div class="bento-card yellow reveal reveal-delay-3">
+        <span class="bento-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        <div class="bento-title bento-title-ink">Private by design. Always.</div>
+        <p class="bento-desc bento-desc-ink">Read only access. Nothing stored. Built to disappear the moment you ask.</p>
+      </div>
+      <div class="bento-card custom reveal reveal-delay-3">
+        <div class="custom-plus">+</div>
+        <div class="custom-title">This one's yours.</div>
+        <p class="custom-desc">Every Iris is different. Tell it what you're chasing, whether that's GPA, recruiting, research, or leadership, and it builds your week around that. No two are the same.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- placeholder, moved to top -->
+
+<!-- ════ CTA ════ -->
+<section class="sec sec-near-black cta-section" id="cta">
+  <div class="cta-bg-glow"></div>
+  <div class="max reveal">
+    <h2 class="cta-headline">Your most ambitious<br>semester starts now.</h2>
+    <p class="cta-sub">Free for every student. One time setup, then it runs itself. The ambitious ones are already in.</p>
+    <div class="cta-actions">
+      <a href="/sign-up" class="btn-pill-primary" style="font-size:16px;padding:16px 32px;"><span>Get early access</span><span>→</span></a>
+      <a href="/sign-up" class="btn-ghost" style="font-size:16px;padding:16px 32px;"><span>Watch the demo</span></a>
+    </div>
+  </div>
+</section>
