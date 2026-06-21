@@ -4,10 +4,12 @@ import { FormEvent, useState } from "react";
 
 interface ConnectCanvasProps {
   isConnected?: boolean;
+  onSuccess?: () => void;
 }
 
 export default function ConnectCanvas({
   isConnected = false,
+  onSuccess,
 }: ConnectCanvasProps) {
   const [canvasDomain, setCanvasDomain] = useState("");
   const [canvasToken, setCanvasToken] = useState("");
@@ -37,6 +39,7 @@ export default function ConnectCanvas({
 
       if (data.success) {
         setConnected(true);
+        onSuccess?.();
       } else {
         setError(data.error ?? "Failed to connect Canvas");
       }
