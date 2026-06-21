@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Iris — Coming Soon</title>
+<link rel="icon" type="image/png" href="/iris-logo-tile.svg"/>
+<link rel="apple-touch-icon" href="/iris-logo-tile.svg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:#fbfbfd;color:#1d1d1f;
+  display:flex;align-items:center;justify-content:center;
+  min-height:100dvh;padding:6vw;position:relative;overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+.bg-glow{
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 50% at 50% 30%,rgba(86,69,212,.06),transparent 70%);
+}
+.wrap{position:relative;width:100%;max-width:880px;}
+.iris-head{
+  display:flex;align-items:center;gap:13px;margin-bottom:40px;
+  opacity:0;animation:fade .6s ease both;
+}
+.iris-mark{
+  width:46px;height:46px;border-radius:13px;overflow:hidden;background:#fff;
+  box-shadow:0 4px 18px rgba(15,23,42,.12);flex-shrink:0;
+}
+.iris-mark img{width:100%;height:100%;object-fit:cover;display:block;}
+.iris-name{font-size:17px;font-weight:700;letter-spacing:-.01em;}
+.iris-status{display:flex;align-items:center;gap:7px;font-size:13px;color:#86868b;margin-top:2px;}
+.iris-dot{width:7px;height:7px;border-radius:50%;background:#30d158;box-shadow:0 0 0 0 rgba(48,209,88,.5);animation:pulse 1.8s ease-in-out infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(48,209,88,.4);}50%{box-shadow:0 0 0 6px rgba(48,209,88,0);}}
+#typed{
+  font-size:clamp(25px,3.6vw,44px);font-weight:600;letter-spacing:-.025em;line-height:1.28;
+  color:#1d1d1f;min-height:1.3em;
+}
+#soon{
+  font-size:clamp(44px,8vw,104px);font-weight:900;letter-spacing:-.05em;line-height:1;
+  margin-top:34px;
+  background:linear-gradient(120deg,#1d1d1f 0%,#5645d4 55%,#2997ff 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+}
+.caret{
+  display:inline-block;width:.5ch;height:1.05em;vertical-align:-.16em;margin-left:.04em;
+  background:#5645d4;border-radius:2px;animation:blink 1.05s step-end infinite;
+}
+#soon .caret{height:.92em;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+.back{
+  display:inline-flex;align-items:center;gap:8px;margin-top:52px;
+  font-size:14px;font-weight:500;color:#1d1d1f;text-decoration:none;
+  padding:12px 24px;border-radius:9999px;border:1px solid rgba(0,0,0,.14);
+  opacity:0;transition:background .2s,border-color .2s,transform .2s;
+}
+.back.show{opacity:1;}
+.back:hover{background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.3);transform:scale(1.03);}
+@keyframes fade{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="wrap">
+  <div class="iris-head">
+    <div class="iris-mark"><img src="/iris-logo-tile.svg" alt="Iris"/></div>
+    <div>
+      <div class="iris-name">Iris</div>
+      <div class="iris-status"><span class="iris-dot"></span><span id="statusText">typing…</span></div>
+    </div>
+  </div>
+  <div id="typed"></div>
+  <div id="soon"></div>
+  <a class="back" href="/"><span>&larr;</span><span>Back home</span></a>
+</div>
+
+<script>
+const MSG = "Hey, it's Iris. I know you really want to use me right now, and honestly, I can't wait to meet you. But I'm still in development. I'd rather not show up half baked and accidentally torch your GPA, so give me a little longer to get this right.";
+const SOON = "Coming soon :)";
+const typedEl = document.getElementById('typed');
+const soonEl = document.getElementById('soon');
+const statusEl = document.getElementById('statusText');
+const backEl = document.querySelector('.back');
+const caret = '<span class="caret"></span>';
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function typeInto(el, text, speed, done){
+  let i = 0;
+  (function tick(){
+    el.innerHTML = text.slice(0, i) + caret;
+    if (i < text.length){
+      const ch = text[i];
+      i++;
+      let delay = speed;
+      if (ch === '.' || ch === ',') delay = speed + (ch === '.' ? 260 : 140);
+      setTimeout(tick, delay);
+    } else {
+      el.innerHTML = text;
+      if (done) setTimeout(done, 650);
+    }
+  })();
+}
+
+function finish(){
+  statusEl.textContent = 'still in development';
+  backEl.classList.add('show');
+}
+
+if (reduced){
+  typedEl.textContent = MSG;
+  soonEl.textContent = SOON;
+  finish();
+} else {
+  setTimeout(() => {
+    typeInto(typedEl, MSG, 30, () => {
+      typeInto(soonEl, SOON, 70, finish);
+    });
+  }, 700);
+}
+</script>
+</body>
+</html>
