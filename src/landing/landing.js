@@ -139,12 +139,21 @@ if (bentoSection) bentoObs.observe(bentoSection);
 
 /* ════ MAGNETIC BUTTONS ════ */
 document.querySelectorAll('.btn-pill-primary,.btn-ghost,.nav-cta').forEach(btn => {
+  if (btn.dataset.hardNav) return;
   btn.addEventListener('mousemove', e => {
     const r = btn.getBoundingClientRect();
     const dx = e.clientX-(r.left+r.width/2), dy = e.clientY-(r.top+r.height/2);
     btn.style.transform = `translate(${dx*.18}px,${dy*.18}px) scale(1.04)`;
   });
   btn.addEventListener('mouseleave', () => btn.style.transform = '');
+});
+
+/* ════ CTA HARD NAVIGATION ════ */
+document.querySelectorAll('[data-hard-nav]').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.assign(link.dataset.hardNav);
+  });
 });
 
 /* ════ SPOTLIGHT ════ */
