@@ -3,6 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateBriefingForUser } from "@/lib/briefing";
 import { createServerClient } from "@/lib/supabase";
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, x-iris-secret",
+};
+
 export const dynamic = "force-dynamic";
 
 const UUID_REGEX =
@@ -25,12 +31,16 @@ function normalizeCanvasDomain(domain: string): string {
     .replace(/\/+$/, "");
 }
 
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS_HEADERS });
+}
+
 export async function POST(req: NextRequest) {
   try {
     if (!isAuthorized(req)) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 },
+        { status: 401, headers: CORS_HEADERS },
       );
     }
 
@@ -43,14 +53,14 @@ export async function POST(req: NextRequest) {
     if (!userId || !UUID_REGEX.test(userId)) {
       return NextResponse.json(
         { success: false, error: "Invalid userId" },
-        { status: 400 },
+        { status: 400, headers: CORS_HEADERS },
       );
     }
 
     if (!data || typeof data !== "object") {
       return NextResponse.json(
         { success: false, error: "Invalid data" },
-        { status: 400 },
+        { status: 400, headers: CORS_HEADERS },
       );
     }
 
@@ -65,7 +75,7 @@ export async function POST(req: NextRequest) {
     if (userError || !user) {
       return NextResponse.json(
         { success: false, error: "User not found" },
-        { status: 404 },
+        { status: 404, headers: CORS_HEADERS },
       );
     }
 
@@ -94,7 +104,7 @@ export async function POST(req: NextRequest) {
         console.error("Canvas integration update failed:", updateError);
         return NextResponse.json(
           { success: false, error: "Failed to save Canvas integration" },
-          { status: 500 },
+          { status: 500, headers: CORS_HEADERS },
         );
       }
     } else {
@@ -110,7 +120,7 @@ export async function POST(req: NextRequest) {
         console.error("Canvas integration insert failed:", insertError);
         return NextResponse.json(
           { success: false, error: "Failed to save Canvas integration" },
-          { status: 500 },
+          { status: 500, headers: CORS_HEADERS },
         );
       }
     }
@@ -125,18 +135,18 @@ export async function POST(req: NextRequest) {
       console.error("Failed to save pending briefing:", briefingError);
       return NextResponse.json(
         { success: false, error: "Failed to save Canvas data" },
-        { status: 500 },
+        { status: 500, headers: CORS_HEADERS },
       );
     }
 
     await generateBriefingForUser(userId);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, { headers: CORS_HEADERS });
   } catch (error) {
     console.error("Canvas sync error:", error);
     return NextResponse.json(
       { success: false, error: "Canvas sync failed" },
-      { status: 500 },
+      { status: 500, headers: CORS_HEADERS },
     );
   }
 }

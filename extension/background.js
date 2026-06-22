@@ -28,19 +28,17 @@ async function scheduleDailySync() {
   await chrome.alarms.create(ALARM_NAME, { periodInMinutes: DAILY_MINUTES });
 }
 
-async function canvasFetch(canvasDomain, cookieValue, path) {
+async function canvasFetch(canvasDomain, path) {
   return fetch(`https://${canvasDomain}${path}`, {
-    headers: {
-      Cookie: `canvas_session=${cookieValue}`,
-    },
+    credentials: "include",
   });
 }
 
-async function fetchCourses(canvasDomain, cookieValue) {
+async function fetchCourses(canvasDomain) {
+  console.log("[Iris] Fetching courses from", canvasDomain);
   const response = await canvasFetch(
     canvasDomain,
-    cookieValue,
-    "/api/v1/courses?enrollment_state=active&per_page=50",
+    "/api/v1/courses?per_page=50",
   );
 
   if (!response.ok) {
@@ -48,6 +46,7 @@ async function fetchCourses(canvasDomain, cookieValue) {
   }
 
   const data = await response.json();
+  console.log("[Iris] Fetched", data.length, "courses");
 
   return data.map((course) => ({
     id: String(course.id),
@@ -56,7 +55,7 @@ async function fetchCourses(canvasDomain, cookieValue) {
   }));
 }
 
-async function fetchAssignments(canvasDomain, cookieValue, courses) {
+async function fetchAssignments(canvasDomain, courses) {
   const now = Date.now();
   const fourteenDaysFromNow = now + 14 * 24 * 60 * 60 * 1000;
 
@@ -65,7 +64,6 @@ async function fetchAssignments(canvasDomain, cookieValue, courses) {
       try {
         const response = await canvasFetch(
           canvasDomain,
-          cookieValue,
           `/api/v1/courses/${course.id}/assignments?per_page=50`,
         );
 
@@ -99,7 +97,7 @@ async function fetchAssignments(canvasDomain, cookieValue, courses) {
   return results.flat();
 }
 
-async function fetchAnnouncements(canvasDomain, cookieValue, courses) {
+async function fetchAnnouncements(canvasDomain, courses) {
   if (courses.length === 0) {
     return [];
   }
@@ -110,7 +108,6 @@ async function fetchAnnouncements(canvasDomain, cookieValue, courses) {
 
   const response = await canvasFetch(
     canvasDomain,
-    cookieValue,
     `/api/v1/announcements?${params}`,
   );
 
@@ -157,17 +154,11 @@ async function syncCanvas() {
   }
 
   try {
-    const courses = await fetchCourses(canvasDomain, cookie.value);
-    const assignments = await fetchAssignments(
-      canvasDomain,
-      cookie.value,
-      courses,
-    );
-    const announcements = await fetchAnnouncements(
-      canvasDomain,
-      cookie.value,
-      courses,
-    );
+    console.log("[Iris] Starting sync for domain:", canvasDomain);
+    const courses = await fetchCourses(canvasDomain);
+    const assignments = await fetchAssignments(canvasDomain, courses);
+    const announcements = await fetchAnnouncements(canvasDomain, courses);
+    console.log("[Iris] Sync data:", { courses: courses.length, assignments: assignments.length, announcements: announcements.length });
 
     const data = { courses, assignments, announcements };
 
