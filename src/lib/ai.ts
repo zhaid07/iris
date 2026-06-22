@@ -43,7 +43,7 @@ function getAnthropicClient(): Anthropic {
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!apiKey || apiKey === "YOUR_VALUE_HERE") {
-    throw new Error("Failed to generate briefing");
+    throw new Error(`ANTHROPIC_API_KEY missing or invalid: "${apiKey}"`);
   }
 
   return new Anthropic({ apiKey });
@@ -74,8 +74,8 @@ export async function generateBriefing(data: BriefingData): Promise<string> {
     }
 
     return text;
-  } catch {
-    throw new Error("Failed to generate briefing");
+  } catch (error) {
+    throw new Error(`Anthropic API error: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -106,7 +106,7 @@ export async function generateChatResponse(
     }
 
     return text;
-  } catch {
-    throw new Error("Failed to generate briefing");
+  } catch (error) {
+    throw new Error(`Anthropic API error: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
