@@ -124,8 +124,8 @@ export async function generateBriefingForUser(userId: string): Promise<void> {
     try {
       briefingText = await generateBriefing(data);
     } catch (error) {
-      console.error("Failed to generate briefing:", error);
-      return;
+      console.error("Briefing generation error details:", error);
+      throw new Error(`Failed to generate briefing: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     const hasPhone = Boolean(user.phone_number?.trim());

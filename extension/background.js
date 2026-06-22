@@ -35,53 +35,61 @@ async function canvasFetch(canvasDomain, path) {
 }
 
 async function fetchCourses(canvasDomain) {
-  console.log("[Iris] Fetching courses from", canvasDomain);
+  console.log("[Iris] Fetching dashboard courses from", canvasDomain);
   const response = await canvasFetch(
     canvasDomain,
-    "/api/v1/courses?per_page=50",
+    "/api/v1/dashboard/dashboard_cards",
   );
 
   if (!response.ok) {
-    throw new Error("Failed to fetch Canvas courses");
+    throw new Error("Failed to fetch Canvas dashboard courses");
   }
 
   const data = await response.json();
-  console.log("[Iris] Fetched", data.length, "courses");
+  console.log("[Iris] Fetched", data.length, "dashboard courses");
+  console.log("[Iris] First course raw:", JSON.stringify(data[0]));
 
-  return data.map((course) => ({
-    id: String(course.id),
-    name: course.name,
-    course_code: course.course_code,
-  }));
+  const sixMonthsAgo = Date.now() - 180 * 24 * 60 * 60 * 1000;
+
+  return data
+    .filter((course) => {
+      const endAt = course.term?.endAt;
+      if (!endAt) return true; // no end date, keep it
+      return new Date(endAt).getTime() > sixMonthsAgo;
+    })
+    .map((course) => ({
+      id: String(course.id),
+      name: course.shortName || course.originalName || course.courseCode,
+      course_code: course.courseCode,
+    }));
+}
+
+async function fetchAllPages(canvasDomain, path) {
+  let url = `https://${canvasDomain}${path}`;
+  const results = [];
+  while (url) {
+    const response = await fetch(url, { credentials: "include" });
+    if (!response.ok) break;
+    const data = await response.json();
+    results.push(...data);
+    const link = response.headers.get("Link") || "";
+    const next = link.match(/<([^>]+)>;\s*rel="next"/);
+    url = next ? next[1] : null;
+  }
+  return results;
 }
 
 async function fetchAssignments(canvasDomain, courses) {
-  const now = Date.now();
-  const fourteenDaysFromNow = now + 14 * 24 * 60 * 60 * 1000;
-
   const results = await Promise.all(
     courses.map(async (course) => {
       try {
-        const response = await canvasFetch(
+        const data = await fetchAllPages(
           canvasDomain,
           `/api/v1/courses/${course.id}/assignments?per_page=50`,
         );
 
-        if (!response.ok) {
-          return [];
-        }
-
-        const data = await response.json();
-
         return data
-          .filter((assignment) => {
-            if (!assignment.due_at) {
-              return false;
-            }
-
-            const dueTime = new Date(assignment.due_at).getTime();
-            return dueTime >= now && dueTime <= fourteenDaysFromNow;
-          })
+          .filter((assignment) => assignment.due_at)
           .map((assignment) => ({
             name: assignment.name,
             due_at: assignment.due_at,
