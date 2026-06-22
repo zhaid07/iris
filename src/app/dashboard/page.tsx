@@ -87,6 +87,7 @@ export default async function DashboardPage() {
         isGoogleConnected={isGoogleConnected}
         isCanvasConnected={isCanvasConnected}
         initialMessages={initialMessages}
+        irisUserId={user.id}
       />
     </main>
   );

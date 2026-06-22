@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Iris for Canvas</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        margin: 0;
+        padding: 16px;
+        width: 320px;
+        color: #111;
+      }
+
+      h1 {
+        font-size: 18px;
+        margin: 0 0 4px;
+      }
+
+      p {
+        font-size: 13px;
+        color: #555;
+        margin: 0 0 12px;
+        line-height: 1.4;
+      }
+
+      label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 13px;
+        margin-bottom: 12px;
+      }
+
+      button {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        background: #fff;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #f5f5f5;
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .success {
+        color: #15803d;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .meta {
+        font-size: 13px;
+        margin-bottom: 8px;
+        word-break: break-all;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .error {
+        color: #b91c1c;
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Iris for Canvas</h1>
+
+    <div id="setup-view">
+      <p>Connect your Canvas account to Iris. Iris syncs once per day in the background.</p>
+
+      <form id="setup-form">
+        <label for="canvas-domain">Canvas domain</label>
+        <input
+          id="canvas-domain"
+          type="text"
+          placeholder="canvas.ucsd.edu"
+          required
+        />
+
+        <label for="user-id">Iris User ID</label>
+        <input
+          id="user-id"
+          type="text"
+          placeholder="Your UUID from the Iris dashboard"
+          required
+        />
+        <p>Find your Iris User ID on your Iris dashboard under Chrome Extension.</p>
+
+        <p id="form-error" class="error hidden"></p>
+        <button type="submit" id="save-btn">Save</button>
+      </form>
+    </div>
+
+    <div id="success-view" class="hidden">
+      <p class="success">Iris is set up. It will sync Canvas daily.</p>
+    </div>
+
+    <div id="configured-view" class="hidden">
+      <p class="meta"><strong>Canvas domain:</strong> <span id="show-domain"></span></p>
+      <p class="meta"><strong>Iris User ID:</strong> <span id="show-user-id"></span></p>
+      <button type="button" id="edit-btn">Edit</button>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

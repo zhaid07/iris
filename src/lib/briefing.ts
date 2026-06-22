@@ -17,6 +17,44 @@ interface IntegrationRow {
   is_active: boolean;
 }
 
+const EMPTY_CANVAS = {
+  assignments: [] as BriefingData["assignments"],
+  announcements: [] as BriefingData["announcements"],
+};
+
+async function getCanvasDataFromBriefings(
+  userId: string,
+): Promise<Pick<BriefingData, "assignments" | "announcements">> {
+  const supabase = createServerClient();
+
+  const { data: briefing, error } = await supabase
+    .from("briefings")
+    .select("raw_data")
+    .eq("user_id", userId)
+    .not("raw_data", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !briefing?.raw_data) {
+    if (error) {
+      console.error("Failed to fetch Canvas raw_data from briefings:", error);
+    }
+    return EMPTY_CANVAS;
+  }
+
+  const raw = briefing.raw_data as Record<string, unknown>;
+
+  return {
+    assignments: Array.isArray(raw.assignments)
+      ? (raw.assignments as BriefingData["assignments"])
+      : [],
+    announcements: Array.isArray(raw.announcements)
+      ? (raw.announcements as BriefingData["announcements"])
+      : [],
+  };
+}
+
 export async function generateBriefingForUser(userId: string): Promise<void> {
   try {
     const supabase = createServerClient();
@@ -50,17 +88,20 @@ export async function generateBriefingForUser(userId: string): Promise<void> {
       (integration) => integration.provider === "google",
     );
 
-    const [canvasData, googleData] = await Promise.all([
-      canvasIntegration
-        ? fetchCanvasData({
+    const canvasDataPromise = canvasIntegration
+      ? canvasIntegration.canvas_token === "cookie-based"
+        ? getCanvasDataFromBriefings(userId)
+        : fetchCanvasData({
             canvas_token: canvasIntegration.canvas_token,
             canvas_domain: canvasIntegration.canvas_domain,
-          })
-        : Promise.resolve({
-            courses: [],
-            assignments: [],
-            announcements: [],
-          }),
+          }).then((data) => ({
+            assignments: data.assignments,
+            announcements: data.announcements,
+          }))
+      : Promise.resolve(EMPTY_CANVAS);
+
+    const [canvasData, googleData] = await Promise.all([
+      canvasDataPromise,
       googleIntegration
         ? fetchGoogleData({
             id: googleIntegration.id,
