@@ -1354,17 +1354,6 @@ footer{background:#f5f5f7;padding:64px 24px 32px;}
     <div><div class="ch-hud-num" id="hdPlatforms">0</div><div class="ch-hud-label">Platforms</div></div>
   </div>
   <div id="ciCards"></div>
-  <div class="ci-thread" id="ciThread" aria-live="polite">
-    <div class="ci-thread-head">
-      <div class="ci-thread-avatar">J</div>
-      <span class="ci-thread-name">Jake</span>
-    </div>
-    <div class="ci-thread-msgs" id="ciThreadMsgs"></div>
-    <div class="ci-thread-compose" id="ciThreadCompose">
-      <div class="ci-compose-field empty" id="ciComposeField"><span class="ci-compose-cursor" id="ciComposeCursor"></span></div>
-      <div class="ci-compose-send">↑</div>
-    </div>
-  </div>
   <div class="ci-caption">
     <div class="ci-caption-line" id="ciLine1"></div>
     <div class="ci-caption-sub" id="ciLine2"></div>
@@ -2197,20 +2186,16 @@ function runPostCardDialogue() {
 }
 
 function runChaosIntro() {
-  const thread = document.getElementById('ciThread');
-  if (thread) thread.classList.add('show');
+  const hud = document.getElementById('chaosHUD');
+  const cards = document.getElementById('ciCards');
+  if (hud) hud.style.display = 'none';
+  if (cards) cards.style.display = 'none';
 
-  if (reducedMotion()) {
-    runDialogueSteps(INTRO_PRE_CARDS, 0, () => {
-      NOTIFS.forEach((_, i) => spawnCard(null, i));
-      schedule(runPostCardDialogue, 500);
-    });
-    return;
-  }
-
-  runDialogueSteps(INTRO_PRE_CARDS, 0, () => {
-    spawnChaosCards(runPostCardDialogue);
-  });
+  const reduced = reducedMotion();
+  captionLocked = true;
+  showIrisReveal(() =>
+    schedule(() => runCinematicSequence(reduced), reduced ? 250 : 450),
+  );
 }
 
 const SEQ = { rec: 1400, org: 0, collapse: 0, morph: 2200, morphHold: 0 };
@@ -2550,14 +2535,7 @@ function skipIntro() {
   chaosTimers = [];
   stopSequenceRaf();
   stopDrift();
-  if (!seqStarted) {
-    seqStarted = true;
-    beginRecognition();
-  }
-  spawnedCards.forEach(el => { el.style.opacity = '0'; });
-  const intro = document.getElementById('chaos-intro');
-  const site = document.getElementById('create-iris');
-  morphToSite(SEQ.morph, intro, site, document.getElementById('sequenceCore'), document.getElementById('sequenceBeat'));
+  finishSite();
 }
 
 document.getElementById('ciSkip').addEventListener('click', skipIntro);
