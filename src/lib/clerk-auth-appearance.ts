@@ -1,0 +1,71 @@
+import type { Appearance } from "@clerk/types";
+
+export const clerkAuthAppearance: Appearance = {
+  variables: {
+    colorPrimary: "#5645d4",
+    colorBackground: "rgba(255,255,255,0.82)",
+    colorInputBackground: "#f5f5f7",
+    colorInputText: "#1d1d1f",
+    colorText: "#1d1d1f",
+    colorTextSecondary: "#86868b",
+    colorDanger: "#ef4444",
+    borderRadius: "8px",
+    fontFamily: "Inter, system-ui, sans-serif",
+    fontSize: "15px",
+  },
+  elements: {
+    rootBox: { width: "100%" },
+    cardBox: { width: "100%" },
+    card: {
+      background: "rgba(255,255,255,0.82)",
+      backdropFilter: "blur(24px) saturate(180%)",
+      WebkitBackdropFilter: "blur(24px) saturate(180%)",
+      border: "1px solid rgba(0,0,0,0.08)",
+      borderRadius: "16px",
+      boxShadow:
+        "0 1px 1px rgba(0,0,0,0.03), 0 8px 32px rgba(0,0,0,0.07), 0 0 0 1px rgba(255,255,255,0.6) inset",
+      width: "100%",
+    },
+    headerTitle: {
+      color: "#1d1d1f",
+      fontSize: "22px",
+      fontWeight: "600",
+      letterSpacing: "-0.4px",
+    },
+    headerSubtitle: { color: "#86868b", fontSize: "14px" },
+    socialButtonsBlockButton: {
+      background: "transparent",
+      border: "1.5px solid rgba(0,0,0,0.25)",
+      borderRadius: "9999px",
+      color: "#1d1d1f",
+      fontSize: "14px",
+      fontWeight: "400",
+    },
+    socialButtonsBlockButtonText: { color: "#1d1d1f" },
+    formFieldLabel: { color: "#86868b", fontSize: "13px" },
+    formFieldInput: {
+      background: "#f5f5f7",
+      border: "1px solid rgba(0,0,0,0.08)",
+      borderRadius: "8px",
+      color: "#1d1d1f",
+      fontSize: "15px",
+    },
+    formButtonPrimary: {
+      background: "#1d1d1f",
+      borderRadius: "9999px",
+      color: "#fff",
+      fontSize: "14px",
+      fontWeight: "500",
+      boxShadow: "none",
+    },
+    footer: {
+      background: "transparent",
+      borderTop: "1px solid rgba(0,0,0,0.06)",
+    },
+    footerActionText: { color: "#86868b" },
+    footerActionLink: { color: "#5645d4", fontWeight: "500" },
+    dividerLine: { background: "rgba(0,0,0,0.08)" },
+    dividerText: { color: "#86868b" },
+    identityPreviewText: { color: "#1d1d1f" },
+  },
+};
