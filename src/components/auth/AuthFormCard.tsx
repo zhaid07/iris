@@ -19,7 +19,7 @@ export default function AuthFormCard({
       <div className="auth-form-card-topbar">
         <div className="auth-form-card-orb">
           <Image
-            src="/iris-logo-tile.svg"
+            src="/iris-logo-tile.png"
             alt=""
             width={32}
             height={32}

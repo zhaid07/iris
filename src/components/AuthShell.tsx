@@ -28,7 +28,7 @@ export default function AuthShell({
         <Link href="/" className="auth-shell-logo">
           <span className="auth-shell-logo-mark">
             <Image
-              src="/iris-logo-tile.svg"
+              src="/iris-logo-tile.png"
               alt=""
               width={28}
               height={28}
@@ -54,7 +54,7 @@ export default function AuthShell({
                   <header className="auth-shell-thread-header">
                     <div className="auth-shell-thread-avatar">
                       <Image
-                        src="/iris-logo-tile.svg"
+                        src="/iris-logo-tile.png"
                         alt=""
                         width={44}
                         height={44}
