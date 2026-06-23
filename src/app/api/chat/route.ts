@@ -31,7 +31,9 @@ export async function POST(req: NextRequest) {
 
     const { data: user, error: userError } = await supabase
       .from("users")
-      .select("id")
+      .select(
+        "id, display_name, major, onboarding_stressors, iris_tone, context_bio, fear_context",
+      )
       .eq("clerk_id", userId)
       .single();
 
@@ -86,6 +88,16 @@ export async function POST(req: NextRequest) {
       response = await generateChatResponse(
         [...history, { role: "user", content: message }],
         { briefing: briefing.content, rawData: briefing.raw_data },
+        {
+          display_name: user.display_name,
+          major: user.major,
+          onboarding_stressors: Array.isArray(user.onboarding_stressors)
+            ? (user.onboarding_stressors as string[])
+            : null,
+          iris_tone: user.iris_tone,
+          context_bio: user.context_bio,
+          fear_context: user.fear_context,
+        },
       );
     } catch (error) {
       console.error("Failed to generate chat response:", error);

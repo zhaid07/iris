@@ -1,38 +1,116 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, useState } from "react";
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 
+import ExtensionWalkthrough from "@/components/onboarding/ExtensionWalkthrough";
 import OnboardingShell from "@/components/onboarding/OnboardingShell";
+import {
+  BRIEFING_PRESETS,
+  getDogMessage,
+  MAJORS,
+  shouldShowFearStep,
+  STRESSORS,
+  TONE_OPTIONS,
+  type IrisTone,
+  type Major,
+  type StressorId,
+} from "@/components/onboarding/constants";
 
 interface OnboardingFlowProps {
   irisUserId: string;
+  defaultName?: string;
 }
 
-type Step = 1 | 2 | 3 | 4;
-type StepDirection = "forward" | "back";
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
-export default function OnboardingFlow({ irisUserId }: OnboardingFlowProps) {
+interface OnboardingData {
+  displayName: string;
+  major: Major | "";
+  stressors: StressorId[];
+  irisTone: IrisTone | "";
+  contextBio: string;
+  fearContext: string;
+  briefingTime: string;
+  briefingCustom: boolean;
+}
+
+export default function OnboardingFlow({
+  irisUserId,
+  defaultName = "",
+}: OnboardingFlowProps) {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<Step>(1);
-  const [direction, setDirection] = useState<StepDirection>("forward");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  const [step, setStep] = useState<Step>(1);
+  const [data, setData] = useState<OnboardingData>({
+    displayName: defaultName,
+    major: "",
+    stressors: [],
+    irisTone: "",
+    contextBio: "",
+    fearContext: "",
+    briefingTime: "08:00",
+    briefingCustom: false,
+  });
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function goTo(step: Step) {
-    setError(null);
-    setDirection(step > currentStep ? "forward" : "back");
-    setCurrentStep(step);
-  }
+  const dogMessage = getDogMessage(step, {
+    displayName: data.displayName,
+    stressors: data.stressors,
+  });
 
-  function handleBack() {
-    if (currentStep > 1) {
-      goTo((currentStep - 1) as Step);
+  const saveProgress = useCallback(async (patch: Record<string, unknown>) => {
+    const res = await fetch("/api/onboarding/save-details", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    const result = await res.json();
+    if (!result.success) {
+      throw new Error(result.error ?? "Failed to save");
+    }
+  }, []);
+
+  const goNext = useCallback(
+    async (patch: Record<string, unknown>, nextStep: Step) => {
+      setLoading(true);
+      setError(null);
+      try {
+        await saveProgress(patch);
+        setStep(nextStep);
+      } catch {
+        setError("Something went wrong saving your answers. Try again.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [saveProgress],
+  );
+
+  function nextAfterPersonalization() {
+    const patch = { contextBio: data.contextBio.trim() };
+    if (shouldShowFearStep(data.stressors)) {
+      goNext(patch, 6);
+    } else {
+      goNext(patch, 7);
     }
   }
+
+  useEffect(() => {
+    if (step === 1) {
+      nameInputRef.current?.focus();
+    }
+  }, [step]);
 
   async function handleCopyUserId() {
     try {
@@ -44,47 +122,16 @@ export default function OnboardingFlow({ irisUserId }: OnboardingFlowProps) {
     }
   }
 
-  async function handleSaveDetails(e: FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/onboarding/save-details", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber, briefingTime: "08:00" }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        goTo(4);
-      } else {
-        setError(data.error ?? "Failed to save details");
-      }
-    } catch {
-      setError("Failed to save details");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   async function handleComplete() {
     setLoading(true);
     setError(null);
-
     try {
-      const res = await fetch("/api/onboarding/complete", {
-        method: "POST",
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
+      const res = await fetch("/api/onboarding/complete", { method: "POST" });
+      const result = await res.json();
+      if (result.success) {
         router.push("/dashboard");
       } else {
-        setError(data.error ?? "Failed to complete onboarding");
+        setError(result.error ?? "Failed to complete onboarding");
       }
     } catch {
       setError("Failed to complete onboarding");
@@ -93,257 +140,304 @@ export default function OnboardingFlow({ irisUserId }: OnboardingFlowProps) {
     }
   }
 
+  function toggleStressor(id: StressorId) {
+    setData((prev) => {
+      const has = prev.stressors.includes(id);
+      const next = has
+        ? prev.stressors.filter((s) => s !== id)
+        : [...prev.stressors, id];
+      return { ...prev, stressors: next };
+    });
+  }
+
+  function handleNameSubmit(e: FormEvent) {
+    e.preventDefault();
+    const name = data.displayName.trim();
+    if (!name) return;
+    goNext({ displayName: name }, 2);
+  }
+
   return (
     <OnboardingShell
-      currentStep={currentStep}
-      direction={direction}
-      onBack={currentStep > 1 ? handleBack : undefined}
+      message={dogMessage.text}
+      messageKey={`${step}-${dogMessage.text}`}
+      messageDelayMs={dogMessage.delayMs}
+      celebrate={step === 9}
     >
-      {currentStep === 1 && (
-        <div className="onboarding-step">
-          <span className="onboarding-step-icon" aria-hidden="true">
-            <svg
-              width="26"
-              height="26"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M5 3v4" />
-              <path d="M3 5h4" />
-              <path d="M17 17v4" />
-              <path d="M15 19h4" />
-              <path d="M12 3l1.9 5.2L19 10l-5.1 1.8L12 17l-1.9-5.2L5 10l5.1-1.8L12 3z" />
-            </svg>
-          </span>
-          <div className="onboarding-step-heading">
-            <h1 className="onboarding-step-title">Welcome to Iris</h1>
-            <p className="onboarding-step-body">
-              You&apos;re 3 steps away from your first daily briefing.
-            </p>
-          </div>
-          <div className="onboarding-actions">
-            <button
-              type="button"
-              className="onboarding-btn"
-              onClick={() => goTo(2)}
-            >
-              Get started
-            </button>
-          </div>
-        </div>
-      )}
-
-      {currentStep === 2 && (
-        <div className="onboarding-step">
-          <span className="onboarding-step-icon" aria-hidden="true">
-            <svg
-              width="26"
-              height="26"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M14 7h6a1 1 0 0 1 1 1v6" />
-              <path d="M21 14a3 3 0 1 1-3 3" />
-              <path d="M10 7H4a1 1 0 0 0-1 1v6a3 3 0 1 0 3 3" />
-              <path d="M10 4a2 2 0 1 1 4 0v6h-4V4z" />
-            </svg>
-          </span>
-          <div className="onboarding-step-heading">
-            <h1 className="onboarding-step-title">Connect your Canvas</h1>
-            <p className="onboarding-step-body">
-              Install the Chrome extension and enter the User ID below when
-              prompted.
-            </p>
-          </div>
-
-          <div className="onboarding-user-id-card">
-            <span className="onboarding-user-id-label">Your User ID</span>
-            <div className="onboarding-user-id-row">
-              <span className="onboarding-user-id-value">{irisUserId}</span>
-              <button
-                type="button"
-                className={`onboarding-copy-btn${copied ? " is-copied" : ""}`}
-                onClick={handleCopyUserId}
-              >
-                {copied ? (
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
-                ) : (
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                  </svg>
-                )}
-                {copied ? "Copied!" : "Copy"}
-              </button>
-            </div>
-          </div>
-
-          <a href="#" className="onboarding-link">
-            Install extension
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M5 12h14" />
-              <path d="M13 6l6 6-6 6" />
-            </svg>
-          </a>
-
-          <div className="onboarding-actions">
-            <button
-              type="button"
-              className="onboarding-btn"
-              onClick={() => goTo(3)}
-            >
-              Continue
-            </button>
-          </div>
-        </div>
-      )}
-
-      {currentStep === 3 && (
-        <form onSubmit={handleSaveDetails} className="onboarding-step">
-          <span className="onboarding-step-icon" aria-hidden="true">
-            <svg
-              width="26"
-              height="26"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M7.5 3h9a1.5 1.5 0 0 1 1.5 1.5v15a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 19.5v-15A1.5 1.5 0 0 1 7.5 3z" />
-              <path d="M11 18h2" />
-            </svg>
-          </span>
-          <div className="onboarding-step-heading">
-            <h1 className="onboarding-step-title">Where should we text you?</h1>
-            <p className="onboarding-step-body">
-              Your daily briefing arrives each morning as a text.
-            </p>
-          </div>
-
+      {step === 1 && (
+        <form onSubmit={handleNameSubmit} className="ob-step">
           <input
-            id="phone"
-            type="tel"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            className="onboarding-input"
-            placeholder="(555) 555-5555"
+            ref={nameInputRef}
+            type="text"
+            value={data.displayName}
+            onChange={(e) =>
+              setData((prev) => ({ ...prev, displayName: e.target.value }))
+            }
+            className="ob-input"
+            placeholder="your name"
+            autoComplete="given-name"
             required
           />
-
-          {error && <p className="onboarding-error">{error}</p>}
-
-          <div className="onboarding-actions">
-            <button type="submit" className="onboarding-btn" disabled={loading}>
-              {loading ? "Saving..." : "Save & continue"}
-            </button>
-            <button
-              type="button"
-              className="onboarding-skip"
-              onClick={() => goTo(4)}
-            >
-              Skip for now
-            </button>
-          </div>
+          {error && <p className="ob-error">{error}</p>}
+          <button type="submit" className="ob-btn" disabled={loading}>
+            continue
+          </button>
         </form>
       )}
 
-      {currentStep === 4 && (
-        <div className="onboarding-step">
-          <span className="onboarding-step-icon" aria-hidden="true">
-            <svg
-              width="26"
-              height="26"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M21.5 12a9.5 9.5 0 1 1-4.3-7.95" />
-              <path d="M9 11.5l3 3L22 5" />
-            </svg>
-          </span>
-          <div className="onboarding-step-heading">
-            <h1 className="onboarding-step-title">You&apos;re all set</h1>
-            <p className="onboarding-step-body">
-              Iris will text you every morning with what&apos;s due and
-              what&apos;s coming up.
-            </p>
+      {step === 2 && (
+        <div className="ob-step">
+          <div className="ob-pills">
+            {MAJORS.map((major) => (
+              <button
+                key={major}
+                type="button"
+                className={`ob-pill${data.major === major ? " is-selected" : ""}`}
+                disabled={loading}
+                onClick={() => {
+                  setData((prev) => ({ ...prev, major }));
+                  goNext({ major }, 3);
+                }}
+              >
+                {major}
+              </button>
+            ))}
           </div>
+          {error && <p className="ob-error">{error}</p>}
+        </div>
+      )}
 
-          <div className="onboarding-sample">
-            <div className="onboarding-sample-meta">
-              <span className="onboarding-sample-avatar">
+      {step === 3 && (
+        <div className="ob-step">
+          <div className="ob-pills">
+            {STRESSORS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                className={`ob-pill${data.stressors.includes(s.id) ? " is-selected" : ""}`}
+                onClick={() => toggleStressor(s.id)}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          {error && <p className="ob-error">{error}</p>}
+          <button
+            type="button"
+            className="ob-btn"
+            disabled={loading || data.stressors.length === 0}
+            onClick={() =>
+              goNext({ onboardingStressors: data.stressors }, 4)
+            }
+          >
+            continue
+          </button>
+        </div>
+      )}
+
+      {step === 4 && (
+        <div className="ob-step">
+          <div className="ob-tone-cards">
+            {TONE_OPTIONS.map((tone) => (
+              <button
+                key={tone.id}
+                type="button"
+                className={`ob-tone-card${data.irisTone === tone.id ? " is-selected" : ""}`}
+                disabled={loading}
+                onClick={() => {
+                  setData((prev) => ({ ...prev, irisTone: tone.id }));
+                  goNext({ irisTone: tone.id }, 5);
+                }}
+              >
+                <span className="ob-tone-card-label">{tone.label}</span>
+                <div className="ob-tone-card-title">{tone.title}</div>
+                <div className="ob-tone-card-desc">{tone.description}</div>
+                <div className="ob-tone-card-sample">{tone.sample}</div>
+              </button>
+            ))}
+          </div>
+          {error && <p className="ob-error">{error}</p>}
+        </div>
+      )}
+
+      {step === 5 && (
+        <div className="ob-step">
+          <textarea
+            value={data.contextBio}
+            onChange={(e) =>
+              setData((prev) => ({
+                ...prev,
+                contextBio: e.target.value.slice(0, 250),
+              }))
+            }
+            className="ob-textarea"
+            placeholder="e.g. junior, two part-time jobs, trying to raise GPA before grad school apps..."
+            maxLength={250}
+          />
+          <span className="ob-char-count">{data.contextBio.length}/250</span>
+          <p className="ob-note">
+            goes directly into how iris thinks. not a profile. actual context.
+          </p>
+          {error && <p className="ob-error">{error}</p>}
+          <button
+            type="button"
+            className="ob-btn"
+            disabled={loading || !data.contextBio.trim()}
+            onClick={nextAfterPersonalization}
+          >
+            continue
+          </button>
+        </div>
+      )}
+
+      {step === 6 && (
+        <div className="ob-step">
+          <textarea
+            value={data.fearContext}
+            onChange={(e) =>
+              setData((prev) => ({ ...prev, fearContext: e.target.value }))
+            }
+            className="ob-textarea"
+            placeholder="e.g. graduating without a job. nobody talks about how real that is..."
+          />
+          <p className="ob-note">
+            anything u write here directly shapes how iris thinks and what it
+            watches out for — for u specifically.
+          </p>
+          {error && <p className="ob-error">{error}</p>}
+          <button
+            type="button"
+            className="ob-btn"
+            disabled={loading}
+            onClick={() =>
+              goNext(
+                { fearContext: data.fearContext.trim() || null },
+                7,
+              )
+            }
+          >
+            continue
+          </button>
+          <button
+            type="button"
+            className="ob-link"
+            disabled={loading}
+            onClick={() => goNext({ fearContext: null }, 7)}
+          >
+            skip
+          </button>
+        </div>
+      )}
+
+      {step === 7 && (
+        <div className="ob-step">
+          <div className="ob-pills">
+            {BRIEFING_PRESETS.map((preset) => (
+              <button
+                key={preset.value}
+                type="button"
+                className={`ob-pill${
+                  !data.briefingCustom && data.briefingTime === preset.value
+                    ? " is-selected"
+                    : ""
+                }`}
+                onClick={() =>
+                  setData((prev) => ({
+                    ...prev,
+                    briefingTime: preset.value,
+                    briefingCustom: false,
+                  }))
+                }
+              >
+                {preset.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={`ob-pill${data.briefingCustom ? " is-selected" : ""}`}
+              onClick={() =>
+                setData((prev) => ({ ...prev, briefingCustom: true }))
+              }
+            >
+              custom
+            </button>
+          </div>
+          {data.briefingCustom && (
+            <div className="ob-custom-time">
+              <input
+                type="time"
+                value={data.briefingTime}
+                onChange={(e) =>
+                  setData((prev) => ({
+                    ...prev,
+                    briefingTime: e.target.value,
+                  }))
+                }
+              />
+            </div>
+          )}
+          {error && <p className="ob-error">{error}</p>}
+          <button
+            type="button"
+            className="ob-btn"
+            disabled={loading}
+            onClick={() => goNext({ briefingTime: data.briefingTime }, 8)}
+          >
+            continue
+          </button>
+        </div>
+      )}
+
+      {step === 8 && (
+        <div className="ob-step">
+          <ExtensionWalkthrough
+            userId={irisUserId}
+            copied={copied}
+            onCopy={handleCopyUserId}
+          />
+          <a href="#" className="ob-text-link">
+            Open Chrome Web Store →
+          </a>
+          {error && <p className="ob-error">{error}</p>}
+          <button
+            type="button"
+            className="ob-btn"
+            disabled={loading}
+            onClick={() => setStep(9)}
+          >
+            done, it&apos;s installed →
+          </button>
+        </div>
+      )}
+
+      {step === 9 && (
+        <div className="ob-step">
+          <div className="ob-imessage">
+            <div className="ob-imessage-meta">
+              <span className="ob-imessage-avatar">
                 <Image
                   src="/iris-logo-tile.png"
                   alt=""
-                  width={22}
-                  height={22}
+                  width={28}
+                  height={28}
                 />
               </span>
-              Iris · 8:00 AM
+              Iris
             </div>
-            <div className="onboarding-sample-bubble">
-              Good morning! Math 23B homework is due tonight. Your CS midterm is
-              in 3 days.
+            <div className="ob-imessage-bubble">
+              good morning. u have math hw due at 11pm, a quiz friday, and ur
+              advisor finally replied. u have time. let&apos;s not waste it.
             </div>
           </div>
-
-          {error && <p className="onboarding-error">{error}</p>}
-
-          <div className="onboarding-actions">
-            <button
-              type="button"
-              className="onboarding-btn"
-              onClick={handleComplete}
-              disabled={loading}
-            >
-              {loading ? "Finishing..." : "Go to dashboard"}
-            </button>
-          </div>
+          {error && <p className="ob-error">{error}</p>}
+          <button
+            type="button"
+            className="ob-btn"
+            disabled={loading}
+            onClick={handleComplete}
+          >
+            {loading ? "..." : "let's go →"}
+          </button>
         </div>
       )}
     </OnboardingShell>

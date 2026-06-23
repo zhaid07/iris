@@ -9,6 +9,12 @@
     "https://*.edu/*",
     "https://irys-iota.vercel.app/*"
   ],
+  "web_accessible_resources": [
+    {
+      "resources": ["iris-mascot.png"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "background": {
     "service_worker": "background.js",
     "type": "module"

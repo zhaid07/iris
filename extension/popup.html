@@ -3,127 +3,452 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Iris for Canvas</title>
+    <title>Iris</title>
     <style>
       * {
         box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
 
       body {
-        font-family: system-ui, -apple-system, sans-serif;
-        margin: 0;
-        padding: 16px;
-        width: 320px;
-        color: #111;
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+        width: 340px;
+        background: #f8f7ff;
+        color: #1d1d1f;
+        overflow: hidden;
       }
 
-      h1 {
-        font-size: 18px;
-        margin: 0 0 4px;
+      /* ── Header ── */
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 16px;
+        border-bottom: 1px solid rgba(86,69,212,.1);
+        background: linear-gradient(135deg, #f3f0ff 0%, #fff 60%);
       }
 
-      p {
-        font-size: 13px;
-        color: #555;
-        margin: 0 0 12px;
-        line-height: 1.4;
+      .logo-mark {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #ede9ff, #f3f0ff);
+        border: 1px solid rgba(86,69,212,.18);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        overflow: hidden;
       }
 
-      label {
-        display: block;
-        font-size: 12px;
-        font-weight: 600;
-        margin-bottom: 4px;
+      .logo-mark img {
+        width: 30px;
+        height: 30px;
+        object-fit: contain;
       }
 
-      input {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font-size: 13px;
-        margin-bottom: 12px;
+      .logo-text {
+        flex: 1;
       }
 
-      button {
-        width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        background: #fff;
-        font-size: 13px;
-        cursor: pointer;
+      .logo-text h1 {
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: -0.3px;
+        color: #1d1d1f;
       }
 
-      button:hover {
-        background: #f5f5f5;
-      }
-
-      button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-
-      .success {
-        color: #15803d;
-        font-size: 13px;
+      .logo-text p {
+        font-size: 11px;
+        color: #5645d4;
+        margin-top: 1px;
         font-weight: 500;
       }
 
-      .meta {
-        font-size: 13px;
-        margin-bottom: 8px;
-        word-break: break-all;
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #d1d1d6;
+        flex-shrink: 0;
       }
 
-      .hidden {
+      .status-dot.synced { background: #34c759; }
+      .status-dot.error  { background: #ff3b30; }
+      .status-dot.syncing {
+        background: #5645d4;
+        animation: pulse 1.2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+      }
+
+      /* ── Body ── */
+      .body {
+        padding: 16px;
+        background: #f8f7ff;
+      }
+
+      /* ── Form ── */
+      .field {
+        margin-bottom: 12px;
+      }
+
+      .field label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: #86868b;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 5px;
+      }
+
+      .field input {
+        width: 100%;
+        padding: 9px 11px;
+        border: 1px solid rgba(86,69,212,.2);
+        border-radius: 8px;
+        font-size: 13px;
+        font-family: inherit;
+        color: #1d1d1f;
+        background: #fff;
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+      }
+
+      .field input:focus {
+        border-color: #5645d4;
+        box-shadow: 0 0 0 3px rgba(86,69,212,.12);
+      }
+
+      .field input::placeholder {
+        color: #c4b8ff;
+      }
+
+      .field-hint {
+        font-size: 11px;
+        color: #aeaeb2;
+        margin-top: 4px;
+        line-height: 1.4;
+      }
+
+      /* ── Buttons ── */
+      .btn-primary {
+        width: 100%;
+        padding: 9px 14px;
+        background: #5645d4;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background 0.15s, opacity 0.15s, box-shadow 0.15s;
+        margin-top: 4px;
+        box-shadow: 0 2px 8px rgba(86,69,212,.3);
+        letter-spacing: -0.1px;
+      }
+
+      .btn-primary:hover {
+        background: #4535b8;
+        box-shadow: 0 4px 12px rgba(86,69,212,.4);
+      }
+      .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+      .btn-secondary {
+        width: 100%;
+        padding: 9px 14px;
+        background: transparent;
+        color: #5645d4;
+        border: 1px solid rgba(86,69,212,.25);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+        margin-top: 8px;
+      }
+
+      .btn-secondary:hover {
+        background: rgba(86,69,212,.06);
+        border-color: rgba(86,69,212,.4);
+      }
+
+      /* ── Error ── */
+      .error-msg {
+        font-size: 12px;
+        color: #ff3b30;
+        margin-bottom: 8px;
+        padding: 8px 10px;
+        background: rgba(255,59,48,.06);
+        border-radius: 6px;
+        border: 1px solid rgba(255,59,48,.15);
+      }
+
+      /* ── Configured view ── */
+      .info-card {
+        background: #fff;
+        border: 1px solid rgba(86,69,212,.15);
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 4px rgba(86,69,212,.06);
+      }
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        padding: 3px 0;
+      }
+
+      .info-row:not(:last-child) {
+        border-bottom: 1px solid rgba(0,0,0,.05);
+        padding-bottom: 7px;
+        margin-bottom: 7px;
+      }
+
+      .info-label {
+        color: #86868b;
+        font-weight: 500;
+      }
+
+      .info-value {
+        color: #1d1d1f;
+        font-weight: 500;
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: right;
+      }
+
+      .sync-status-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: #86868b;
+        margin-bottom: 12px;
+      }
+
+      /* ── Success view ── */
+      .success-block {
+        text-align: center;
+        padding: 8px 0 4px;
+      }
+
+      .success-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(52,199,89,.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 20px;
+      }
+
+      .success-block h2 {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1d1d1f;
+        margin-bottom: 4px;
+      }
+
+      .success-block p {
+        font-size: 12px;
+        color: #86868b;
+        line-height: 1.5;
+      }
+
+      /* ── Coming soon teaser ── */
+      .teaser {
+        margin-top: 14px;
+        border-top: 1px solid rgba(86,69,212,.1);
+        padding-top: 14px;
+      }
+
+      .teaser-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+      }
+
+      .teaser-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: #1d1d1f;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .coming-soon-badge {
+        font-size: 10px;
+        font-weight: 600;
+        color: #5645d4;
+        background: rgba(86,69,212,.1);
+        border: 1px solid rgba(86,69,212,.2);
+        border-radius: 999px;
+        padding: 2px 8px;
+      }
+
+      .teaser-desc {
+        font-size: 11px;
+        color: #86868b;
+        line-height: 1.4;
+        margin-bottom: 10px;
+      }
+
+      .radio-group {
+        display: flex;
+        gap: 8px;
+        margin-top: 2px;
+      }
+
+      .radio-option {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        padding: 6px 14px;
+        border: 1px solid rgba(86,69,212,.2);
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #86868b;
+        background: #fff;
+        transition: all 0.15s;
+        user-select: none;
+      }
+
+      .radio-option input[type="radio"] {
         display: none;
       }
 
-      .error {
-        color: #b91c1c;
-        font-size: 12px;
-        margin-bottom: 8px;
+      .radio-option:has(input:checked) {
+        background: rgba(86,69,212,.1);
+        border-color: #5645d4;
+        color: #5645d4;
       }
+
+      /* ── Util ── */
+      .hidden { display: none !important; }
     </style>
   </head>
   <body>
-    <h1>Iris for Canvas</h1>
 
-    <div id="setup-view">
-      <p>Connect your Canvas account to Iris. Iris syncs once per day in the background.</p>
-
-      <form id="setup-form">
-        <label for="canvas-domain">Canvas domain</label>
-        <input
-          id="canvas-domain"
-          type="text"
-          placeholder="canvas.ucsd.edu"
-          required
-        />
-
-        <label for="user-id">Iris User ID</label>
-        <input
-          id="user-id"
-          type="text"
-          placeholder="Your UUID from the Iris dashboard"
-          required
-        />
-        <p>Find your Iris User ID on your Iris dashboard under Chrome Extension.</p>
-
-        <p id="form-error" class="error hidden"></p>
-        <button type="submit" id="save-btn">Save</button>
-      </form>
+    <!-- Header -->
+    <div class="header">
+      <div class="logo-mark"><img src="iris-mascot.png" alt="Iris" /></div>
+      <div class="logo-text">
+        <h1>Iris</h1>
+        <p>Academic assistant</p>
+      </div>
+      <div class="status-dot" id="header-dot"></div>
     </div>
 
-    <div id="success-view" class="hidden">
-      <p class="success">Iris is set up. It will sync Canvas daily.</p>
-    </div>
+    <div class="body">
 
-    <div id="configured-view" class="hidden">
-      <p class="meta"><strong>Canvas domain:</strong> <span id="show-domain"></span></p>
-      <p class="meta"><strong>Iris User ID:</strong> <span id="show-user-id"></span></p>
-      <button type="button" id="edit-btn">Edit</button>
+      <!-- Setup view -->
+      <div id="setup-view">
+        <div class="field">
+          <label for="canvas-domain">Canvas domain</label>
+          <input id="canvas-domain" type="text" placeholder="canvas.ucsc.edu" />
+        </div>
+
+        <div class="field">
+          <label for="user-id">Iris User ID</label>
+          <input id="user-id" type="text" placeholder="Find this on your Iris dashboard" />
+          <p class="field-hint">Go to your Iris dashboard → Chrome Extension to copy your ID.</p>
+        </div>
+
+        <p id="form-error" class="error-msg hidden"></p>
+        <button type="button" id="save-btn" class="btn-primary">Connect Canvas</button>
+
+        <div class="teaser">
+          <span class="teaser-title">🏫 Multiple organizations</span>
+          <span class="coming-soon-badge">Coming soon</span>
+        </div>
+      </div>
+
+      <!-- Success view -->
+      <div id="success-view" class="hidden">
+        <div class="success-block">
+          <div class="success-icon">✓</div>
+          <h2>Canvas connected</h2>
+          <p>Iris is syncing your courses and assignments in the background.</p>
+        </div>
+
+        <div class="teaser">
+          <div class="teaser-header">
+            <span class="teaser-title">🏫 Multiple organizations</span>
+            <span class="coming-soon-badge">Coming soon</span>
+          </div>
+          <p class="teaser-desc">Do you use Canvas at more than one school (e.g. a community college and a university)?</p>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="multi-org-success" value="yes" />
+              Yes
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="multi-org-success" value="no" />
+              No
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Configured view -->
+      <div id="configured-view" class="hidden">
+        <div class="sync-status-row">
+          <div class="status-dot synced" id="configured-dot"></div>
+          <span id="sync-status-text">Synced</span>
+        </div>
+
+        <div class="info-card">
+          <div class="info-row">
+            <span class="info-label">Canvas</span>
+            <span class="info-value" id="show-domain"></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">User ID</span>
+            <span class="info-value" id="show-user-id"></span>
+          </div>
+        </div>
+
+        <button type="button" id="sync-now-btn" class="btn-primary">Sync now</button>
+        <button type="button" id="edit-btn" class="btn-secondary">Edit settings</button>
+
+        <div class="teaser">
+          <div class="teaser-header">
+            <span class="teaser-title">🏫 Multiple organizations</span>
+            <span class="coming-soon-badge">Coming soon</span>
+          </div>
+          <p class="teaser-desc">Do you use Canvas at more than one school (e.g. a community college and a university)?</p>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" name="multi-org-configured" value="yes" />
+              Yes
+            </label>
+            <label class="radio-option">
+              <input type="radio" name="multi-org-configured" value="no" />
+              No
+            </label>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <script src="popup.js"></script>

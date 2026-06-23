@@ -38,5 +38,12 @@ export default async function OnboardingPage() {
     );
   }
 
-  return <OnboardingFlow irisUserId={user.id} />;
+  const defaultName =
+    clerkUser.firstName?.trim() ||
+    clerkUser.username?.trim() ||
+    "";
+
+  return (
+    <OnboardingFlow irisUserId={user.id} defaultName={defaultName} />
+  );
 }

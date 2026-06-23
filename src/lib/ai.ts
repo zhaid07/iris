@@ -33,6 +33,55 @@ export interface ChatMessage {
   content: string;
 }
 
+export interface UserProfile {
+  display_name?: string | null;
+  major?: string | null;
+  onboarding_stressors?: string[] | null;
+  iris_tone?: string | null;
+  context_bio?: string | null;
+  fear_context?: string | null;
+}
+
+const TONE_INSTRUCTIONS: Record<string, string> = {
+  nice: "Use a calm, supportive tone. No profanity. Be gentle but clear.",
+  friend: "Talk like a friend who cares — direct, a little blunt, lowercase casual.",
+  unhinged:
+    "Maximum urgency and personality. Still factually correct. Theatrical but helpful.",
+};
+
+export function buildProfileBlock(profile: UserProfile | null | undefined): string {
+  if (!profile) return "";
+
+  const parts: string[] = [];
+
+  if (profile.display_name?.trim()) {
+    parts.push(`Call them ${profile.display_name.trim()}.`);
+  }
+  if (profile.major?.trim()) {
+    parts.push(`They study ${profile.major.trim()}.`);
+  }
+  if (profile.onboarding_stressors?.length) {
+    parts.push(
+      `Main stressors: ${profile.onboarding_stressors.join(", ").replace(/_/g, " ")}.`,
+    );
+  }
+  if (profile.context_bio?.trim()) {
+    parts.push(`Personal context: ${profile.context_bio.trim()}`);
+  }
+  if (profile.fear_context?.trim()) {
+    parts.push(
+      `What actually scares them (watch for this): ${profile.fear_context.trim()}`,
+    );
+  }
+  if (profile.iris_tone && TONE_INSTRUCTIONS[profile.iris_tone]) {
+    parts.push(TONE_INSTRUCTIONS[profile.iris_tone]);
+  }
+
+  if (parts.length === 0) return "";
+
+  return `\n\nStudent profile:\n${parts.join(" ")}\nPrioritize and phrase everything according to this profile.`;
+}
+
 const BRIEFING_SYSTEM_PROMPT =
   "You are Iris, a personal academic assistant. Generate a concise morning briefing in 3-5 sentences. No markdown. No bullet points. Plain english only. Lead with the single most urgent thing. Be specific about deadlines and times.";
 
@@ -56,14 +105,18 @@ function extractTextContent(
   return textBlock?.type === "text" ? textBlock.text : null;
 }
 
-export async function generateBriefing(data: BriefingData): Promise<string> {
+export async function generateBriefing(
+  data: BriefingData,
+  profile?: UserProfile | null,
+): Promise<string> {
   try {
     const client = getAnthropicClient();
+    const system = BRIEFING_SYSTEM_PROMPT + buildProfileBlock(profile);
 
     const response = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 512,
-      system: BRIEFING_SYSTEM_PROMPT,
+      system,
       messages: [{ role: "user", content: JSON.stringify(data) }],
     });
 
@@ -82,14 +135,16 @@ export async function generateBriefing(data: BriefingData): Promise<string> {
 export async function generateChatResponse(
   messages: ChatMessage[],
   context: unknown,
+  profile?: UserProfile | null,
 ): Promise<string> {
   try {
     const client = getAnthropicClient();
+    const system = CHAT_SYSTEM_PROMPT + buildProfileBlock(profile);
 
     const response = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 1024,
-      system: CHAT_SYSTEM_PROMPT,
+      system,
       messages: [
         { role: "user", content: JSON.stringify(context) },
         ...messages.map((message) => ({

@@ -61,7 +61,9 @@ export async function generateBriefingForUser(userId: string): Promise<void> {
 
     const { data: user, error: userError } = await supabase
       .from("users")
-      .select("id, phone_number")
+      .select(
+        "id, phone_number, display_name, major, onboarding_stressors, iris_tone, context_bio, fear_context",
+      )
       .eq("id", userId)
       .single();
 
@@ -122,7 +124,16 @@ export async function generateBriefingForUser(userId: string): Promise<void> {
     let briefingText: string;
 
     try {
-      briefingText = await generateBriefing(data);
+      briefingText = await generateBriefing(data, {
+        display_name: user.display_name,
+        major: user.major,
+        onboarding_stressors: Array.isArray(user.onboarding_stressors)
+          ? (user.onboarding_stressors as string[])
+          : null,
+        iris_tone: user.iris_tone,
+        context_bio: user.context_bio,
+        fear_context: user.fear_context,
+      });
     } catch (error) {
       console.error("Briefing generation error details:", error);
       throw new Error(`Failed to generate briefing: ${error instanceof Error ? error.message : String(error)}`);

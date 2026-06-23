@@ -5,7 +5,25 @@ import { createServerClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
-const ALLOWED_BRIEFING_TIMES = ["06:00", "07:00", "08:00", "09:00", "10:00"];
+const ALLOWED_MAJORS = [
+  "Engineering",
+  "Business",
+  "Sciences",
+  "Arts",
+  "Other",
+];
+
+const ALLOWED_STRESSORS = [
+  "keeping_up_with_deadlines",
+  "my_gpa",
+  "balancing_everything",
+  "the_future_honestly",
+  "all_of_the_above",
+];
+
+const ALLOWED_TONES = ["nice", "friend", "unhinged"];
+
+const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,23 +37,52 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const phoneNumber =
-      typeof body.phoneNumber === "string" ? body.phoneNumber.trim() : "";
-    const briefingTime =
-      typeof body.briefingTime === "string" && body.briefingTime.trim()
-        ? body.briefingTime.trim()
-        : "08:00";
+    const update: Record<string, unknown> = {};
 
-    if (!phoneNumber) {
-      return NextResponse.json(
-        { success: false, error: "Phone number is required" },
-        { status: 400 },
-      );
+    if (typeof body.displayName === "string" && body.displayName.trim()) {
+      update.display_name = body.displayName.trim();
     }
 
-    if (!ALLOWED_BRIEFING_TIMES.includes(briefingTime)) {
+    if (typeof body.major === "string" && ALLOWED_MAJORS.includes(body.major)) {
+      update.major = body.major;
+    }
+
+    if (Array.isArray(body.onboardingStressors)) {
+      const stressors = body.onboardingStressors.filter(
+        (s: unknown): s is string =>
+          typeof s === "string" && ALLOWED_STRESSORS.includes(s),
+      );
+      if (stressors.length > 0) {
+        update.onboarding_stressors = stressors;
+      }
+    }
+
+    if (typeof body.irisTone === "string" && ALLOWED_TONES.includes(body.irisTone)) {
+      update.iris_tone = body.irisTone;
+    }
+
+    if (typeof body.contextBio === "string") {
+      update.context_bio = body.contextBio.trim();
+    }
+
+    if ("fearContext" in body) {
+      update.fear_context =
+        typeof body.fearContext === "string" && body.fearContext.trim()
+          ? body.fearContext.trim()
+          : null;
+    }
+
+    if (typeof body.briefingTime === "string" && TIME_REGEX.test(body.briefingTime.trim())) {
+      update.briefing_time = body.briefingTime.trim();
+    }
+
+    if (typeof body.phoneNumber === "string" && body.phoneNumber.trim()) {
+      update.phone_number = body.phoneNumber.trim();
+    }
+
+    if (Object.keys(update).length === 0) {
       return NextResponse.json(
-        { success: false, error: "Invalid briefing time" },
+        { success: false, error: "No valid fields to save" },
         { status: 400 },
       );
     }
@@ -43,10 +90,7 @@ export async function POST(req: NextRequest) {
     const supabase = createServerClient();
     const { error } = await supabase
       .from("users")
-      .update({
-        phone_number: phoneNumber,
-        briefing_time: briefingTime,
-      })
+      .update(update)
       .eq("clerk_id", userId);
 
     if (error) {

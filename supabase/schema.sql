@@ -7,6 +7,12 @@ CREATE TABLE IF NOT EXISTS users (
   phone_number text,
   briefing_time text DEFAULT '08:00',
   timezone text DEFAULT 'America/Los_Angeles',
+  display_name text,
+  major text,
+  onboarding_stressors jsonb,
+  iris_tone text,
+  context_bio text,
+  fear_context text,
   onboarding_complete boolean DEFAULT false,
   created_at timestamptz DEFAULT now()
 );
