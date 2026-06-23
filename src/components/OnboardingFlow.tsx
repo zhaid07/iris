@@ -1,38 +1,31 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 
-import ConnectCanvas from "@/components/ConnectCanvas";
-import ConnectGoogle from "@/components/ConnectGoogle";
+import OnboardingShell from "@/components/onboarding/OnboardingShell";
 
 interface OnboardingFlowProps {
-  isGoogleConnected: boolean;
-  isCanvasConnected: boolean;
-  googleError?: boolean;
+  irisUserId: string;
 }
 
-const STEPS = ["Google", "Canvas", "Details", "Done"];
-
-const BRIEFING_TIMES = [
-  { label: "6am", value: "06:00" },
-  { label: "7am", value: "07:00" },
-  { label: "8am", value: "08:00" },
-  { label: "9am", value: "09:00" },
-  { label: "10am", value: "10:00" },
-];
-
-export default function OnboardingFlow({
-  isGoogleConnected,
-  isCanvasConnected,
-  googleError = false,
-}: OnboardingFlowProps) {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [canvasConnected, setCanvasConnected] = useState(isCanvasConnected);
+export default function OnboardingFlow({ irisUserId }: OnboardingFlowProps) {
+  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [briefingTime, setBriefingTime] = useState("08:00");
+  const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function handleCopyUserId() {
+    try {
+      await navigator.clipboard.writeText(irisUserId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError("Failed to copy User ID");
+    }
+  }
 
   async function handleSaveDetails(e: FormEvent) {
     e.preventDefault();
@@ -43,7 +36,7 @@ export default function OnboardingFlow({
       const res = await fetch("/api/onboarding/save-details", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber, briefingTime }),
+        body: JSON.stringify({ phoneNumber, briefingTime: "08:00" }),
       });
 
       const data = await res.json();
@@ -60,141 +53,158 @@ export default function OnboardingFlow({
     }
   }
 
+  async function handleComplete() {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/onboarding/complete", {
+        method: "POST",
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        router.push("/dashboard");
+      } else {
+        setError(data.error ?? "Failed to complete onboarding");
+      }
+    } catch {
+      setError("Failed to complete onboarding");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex gap-2">
-        {STEPS.map((label, index) => {
-          const stepNumber = index + 1;
-          const isActive = stepNumber <= currentStep;
-
-          return (
-            <div key={label} className="flex flex-1 flex-col gap-1">
-              <div
-                className={`h-2 rounded ${isActive ? "bg-blue-600" : "bg-gray-200"}`}
-              />
-              <span className="text-center text-xs text-gray-600">{label}</span>
-            </div>
-          );
-        })}
-      </div>
-
+    <OnboardingShell currentStep={currentStep}>
       {currentStep === 1 && (
-        <div className="flex flex-col gap-4">
-          <h1 className="text-xl font-semibold">Connect Google</h1>
-          <ConnectGoogle isConnected={isGoogleConnected} />
-          {googleError && (
-            <p className="text-sm text-red-600">
-              Google connection failed. Please try again.
-            </p>
-          )}
+        <div className="onboarding-step">
+          <h1 className="onboarding-step-title">Welcome to Iris</h1>
+          <p className="onboarding-step-body">
+            You&apos;re 3 steps away from your first daily briefing.
+          </p>
           <button
             type="button"
-            disabled={!isGoogleConnected}
+            className="onboarding-btn"
             onClick={() => setCurrentStep(2)}
-            className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
           >
-            Next
+            Get started
           </button>
         </div>
       )}
 
       {currentStep === 2 && (
-        <div className="flex flex-col gap-4">
-          <h1 className="text-xl font-semibold">Connect Canvas</h1>
-          <ConnectCanvas
-            isConnected={isCanvasConnected || canvasConnected}
-            onSuccess={() => setCanvasConnected(true)}
-          />
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setCurrentStep(1)}
-              className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
-            >
-              Back
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentStep(3)}
-              className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
-            >
-              Next
-            </button>
+        <div className="onboarding-step">
+          <h1 className="onboarding-step-title">Connect your Canvas</h1>
+          <p className="onboarding-step-body">
+            Install the Chrome extension and enter the User ID below when
+            prompted.
+          </p>
+
+          <div className="onboarding-user-id-card">
+            <span className="onboarding-user-id-label">Your User ID</span>
+            <div className="onboarding-user-id-row">
+              <span className="onboarding-user-id-value">{irisUserId}</span>
+              <button
+                type="button"
+                className="onboarding-copy-btn"
+                onClick={handleCopyUserId}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                {copied ? "Copied!" : "Copy"}
+              </button>
+            </div>
           </div>
+
+          <a href="#" className="onboarding-link">
+            Install extension →
+          </a>
+
+          <button
+            type="button"
+            className="onboarding-btn"
+            onClick={() => setCurrentStep(3)}
+          >
+            Continue
+          </button>
         </div>
       )}
 
       {currentStep === 3 && (
-        <form onSubmit={handleSaveDetails} className="flex flex-col gap-4">
-          <h1 className="text-xl font-semibold">Phone &amp; Briefing Time</h1>
+        <form onSubmit={handleSaveDetails} className="onboarding-step">
+          <h1 className="onboarding-step-title">Where should we text you?</h1>
+          <p className="onboarding-step-body">
+            Your daily briefing arrives each morning as a text.
+          </p>
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="phone" className="text-sm text-gray-600">
-              Phone number
-            </label>
-            <input
-              id="phone"
-              type="tel"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              className="rounded border border-gray-300 px-3 py-2 text-sm"
-              required
-            />
-          </div>
+          <input
+            id="phone"
+            type="tel"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            className="onboarding-input"
+            placeholder="(555) 555-5555"
+            required
+          />
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="briefing-time" className="text-sm text-gray-600">
-              Briefing time
-            </label>
-            <select
-              id="briefing-time"
-              value={briefingTime}
-              onChange={(e) => setBriefingTime(e.target.value)}
-              className="rounded border border-gray-300 px-3 py-2 text-sm"
-            >
-              {BRIEFING_TIMES.map((time) => (
-                <option key={time.value} value={time.value}>
-                  {time.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          {error && <p className="onboarding-error">{error}</p>}
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          <button type="submit" className="onboarding-btn" disabled={loading}>
+            {loading ? "Saving..." : "Save & continue"}
+          </button>
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setCurrentStep(2)}
-              className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50"
-            >
-              Back
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
-            >
-              {loading ? "Saving..." : "Next"}
-            </button>
-          </div>
+          <button
+            type="button"
+            className="onboarding-skip"
+            onClick={() => {
+              setError(null);
+              setCurrentStep(4);
+            }}
+          >
+            Skip for now
+          </button>
         </form>
       )}
 
       {currentStep === 4 && (
-        <div className="flex flex-col gap-4">
-          <h1 className="text-xl font-semibold">You&apos;re all set</h1>
-          <p className="text-gray-600">
-            Iris is set up. Your first briefing arrives tomorrow morning.
+        <div className="onboarding-step">
+          <h1 className="onboarding-step-title">You&apos;re all set</h1>
+          <p className="onboarding-step-body">
+            Iris will text you every morning with what&apos;s due and
+            what&apos;s coming up.
           </p>
-          <Link
-            href="/dashboard"
-            className="inline-block rounded border border-gray-300 px-4 py-2 text-center text-sm hover:bg-gray-50"
+
+          <div className="onboarding-sample-bubble">
+            Good morning! Math 23B homework is due tonight. Your CS midterm is
+            in 3 days.
+          </div>
+
+          {error && <p className="onboarding-error">{error}</p>}
+
+          <button
+            type="button"
+            className="onboarding-btn"
+            onClick={handleComplete}
+            disabled={loading}
           >
-            Go to Dashboard
-          </Link>
+            {loading ? "Finishing..." : "Go to dashboard"}
+          </button>
         </div>
       )}
-    </div>
+    </OnboardingShell>
   );
 }

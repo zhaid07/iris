@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import OnboardingFlow from "@/components/OnboardingFlow";
@@ -6,56 +6,37 @@ import { createServerClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
-export default async function OnboardingPage({
-  searchParams,
-}: {
-  searchParams: { error?: string };
-}) {
+export default async function OnboardingPage() {
   const { userId } = await auth();
 
   if (!userId) {
     redirect("/sign-in");
   }
 
+  const clerk = await clerkClient();
+  const clerkUser = await clerk.users.getUser(userId);
+
+  if (clerkUser.publicMetadata?.onboardingComplete === true) {
+    redirect("/dashboard");
+  }
+
   const supabase = createServerClient();
 
   const { data: user, error: userError } = await supabase
     .from("users")
-    .select("id, onboarding_complete")
+    .select("id")
     .eq("clerk_id", userId)
     .single();
 
   if (userError || !user) {
     return (
       <main className="mx-auto max-w-lg p-8">
-        <p className="text-gray-600">Account setup in progress. Please try again in a moment.</p>
+        <p className="text-gray-600">
+          Account setup in progress. Please try again in a moment.
+        </p>
       </main>
     );
   }
 
-  if (user.onboarding_complete) {
-    redirect("/dashboard");
-  }
-
-  const { data: integrations } = await supabase
-    .from("integrations")
-    .select("provider")
-    .eq("user_id", user.id)
-    .eq("is_active", true);
-
-  const isGoogleConnected =
-    integrations?.some((i) => i.provider === "google") ?? false;
-  const isCanvasConnected =
-    integrations?.some((i) => i.provider === "canvas") ?? false;
-  const googleError = searchParams.error === "google_failed";
-
-  return (
-    <main className="mx-auto max-w-lg p-8">
-      <OnboardingFlow
-        isGoogleConnected={isGoogleConnected}
-        isCanvasConnected={isCanvasConnected}
-        googleError={googleError}
-      />
-    </main>
-  );
+  return <OnboardingFlow irisUserId={user.id} />;
 }

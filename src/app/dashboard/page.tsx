@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import DashboardContent from "@/components/DashboardContent";
@@ -13,11 +13,18 @@ export default async function DashboardPage() {
     redirect("/sign-in");
   }
 
+  const clerk = await clerkClient();
+  const clerkUser = await clerk.users.getUser(userId);
+
+  if (clerkUser.publicMetadata?.onboardingComplete !== true) {
+    redirect("/onboarding");
+  }
+
   const supabase = createServerClient();
 
   const { data: user, error: userError } = await supabase
     .from("users")
-    .select("id, onboarding_complete")
+    .select("id")
     .eq("clerk_id", userId)
     .single();
 
@@ -29,10 +36,6 @@ export default async function DashboardPage() {
         </p>
       </main>
     );
-  }
-
-  if (!user.onboarding_complete) {
-    redirect("/onboarding");
   }
 
   const { data: briefing } = await supabase

@@ -22,7 +22,9 @@ export async function POST(req: NextRequest) {
     const phoneNumber =
       typeof body.phoneNumber === "string" ? body.phoneNumber.trim() : "";
     const briefingTime =
-      typeof body.briefingTime === "string" ? body.briefingTime.trim() : "";
+      typeof body.briefingTime === "string" && body.briefingTime.trim()
+        ? body.briefingTime.trim()
+        : "08:00";
 
     if (!phoneNumber) {
       return NextResponse.json(
@@ -44,7 +46,6 @@ export async function POST(req: NextRequest) {
       .update({
         phone_number: phoneNumber,
         briefing_time: briefingTime,
-        onboarding_complete: true,
       })
       .eq("clerk_id", userId);
 
