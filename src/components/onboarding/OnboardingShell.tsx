@@ -1,40 +1,63 @@
+"use client";
+
+import Image from "next/image";
 import type { ReactNode } from "react";
 
-import IrisMascot from "@/components/onboarding/IrisMascot";
+import IrisBubble from "@/components/onboarding/IrisBubble";
 import "./onboarding-shell.css";
 
 interface OnboardingShellProps {
+  step: number;
   message: string;
   messageKey: string | number;
   messageDelayMs?: number;
-  celebrate?: boolean;
+  messageInitialDelayMs?: number;
+  dogJump?: boolean;
+  leaving?: boolean;
   children: ReactNode;
 }
 
 export default function OnboardingShell({
+  step,
   message,
   messageKey,
   messageDelayMs = 0,
-  celebrate = false,
+  messageInitialDelayMs = 0,
+  dogJump = false,
+  leaving = false,
   children,
 }: OnboardingShellProps) {
   return (
-    <div className="onboarding-shell">
-      <div className="onboarding-shell-blob" aria-hidden="true" />
-      <div className="onboarding-shell-grid" aria-hidden="true" />
+    <main className="shell" data-step={step}>
+      <div className="scene">
+        <aside className="iris-zone" aria-label="Iris">
+          <div className={`dog-stage${dogJump ? " jump" : ""}`}>
+            <Image
+              src="/iris-dog-cutout.png"
+              alt="Iris, a dog wearing sunglasses"
+              width={590}
+              height={590}
+              className="dog"
+              priority
+            />
+            <span className="status-dot" aria-hidden="true" />
+          </div>
+        </aside>
 
-      <div className="onboarding-shell-stage">
-        <div key={messageKey} className="onboarding-shell-response">
-          {children}
-        </div>
+        <section className="response-zone">
+          <div className="lime-orbit" aria-hidden="true" />
+          <div className="response-inner">
+            <IrisBubble
+              message={message}
+              messageKey={messageKey}
+              delayMs={messageDelayMs}
+              initialDelayMs={messageInitialDelayMs}
+            />
+            <div className="turn">reply to iris</div>
+            <div className={`mount${leaving ? " leaving" : ""}`}>{children}</div>
+          </div>
+        </section>
       </div>
-
-      <IrisMascot
-        message={message}
-        messageKey={messageKey}
-        delayMs={messageDelayMs}
-        celebrate={celebrate}
-      />
-    </div>
+    </main>
   );
 }

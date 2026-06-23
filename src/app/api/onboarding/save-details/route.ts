@@ -14,11 +14,18 @@ const ALLOWED_MAJORS = [
 ];
 
 const ALLOWED_STRESSORS = [
-  "keeping_up_with_deadlines",
+  "deadlines",
   "my_gpa",
-  "balancing_everything",
-  "the_future_honestly",
-  "all_of_the_above",
+  "lsat_mcat_gre",
+  "internship",
+  "job_after_graduation",
+  "career_choice",
+  "grad_school",
+  "research_experience",
+  "financial_aid",
+  "work_and_school",
+  "burnout",
+  "the_future",
 ];
 
 const ALLOWED_TONES = ["nice", "friend", "unhinged"];

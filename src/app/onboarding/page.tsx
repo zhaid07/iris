@@ -6,6 +6,32 @@ import { createServerClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
+async function ensureSupabaseUser(clerkId: string, email: string) {
+  const supabase = createServerClient();
+
+  const { data: existing } = await supabase
+    .from("users")
+    .select("id")
+    .eq("clerk_id", clerkId)
+    .maybeSingle();
+
+  if (existing) {
+    return existing;
+  }
+
+  const { data: created, error } = await supabase
+    .from("users")
+    .insert({ clerk_id: clerkId, email })
+    .select("id")
+    .single();
+
+  if (error || !created) {
+    return null;
+  }
+
+  return created;
+}
+
 export default async function OnboardingPage() {
   const { userId } = await auth();
 
@@ -20,15 +46,21 @@ export default async function OnboardingPage() {
     redirect("/dashboard");
   }
 
-  const supabase = createServerClient();
+  const email = clerkUser.emailAddresses[0]?.emailAddress;
 
-  const { data: user, error: userError } = await supabase
-    .from("users")
-    .select("id")
-    .eq("clerk_id", userId)
-    .single();
+  if (!email) {
+    return (
+      <main className="mx-auto max-w-lg p-8">
+        <p className="text-gray-600">
+          Account setup in progress. Please try again in a moment.
+        </p>
+      </main>
+    );
+  }
 
-  if (userError || !user) {
+  const user = await ensureSupabaseUser(userId, email);
+
+  if (!user) {
     return (
       <main className="mx-auto max-w-lg p-8">
         <p className="text-gray-600">
