@@ -537,8 +537,8 @@ export default function OnboardingFlow({
                 <div className="address" />
                 <span className="puzzle">⌘</span>
               </div>
-              <div className="browser-body">
-                <div className="visual">
+              <div className="browser-body" id="visual">
+                <div className="visual" key={walkthroughStep}>
                   <div className="visual-icon">{walkthrough.icon}</div>
                   <strong>{walkthrough.title}</strong>
                   <p>{walkthrough.description}</p>

@@ -16,15 +16,17 @@ export default function IrisBubble({
   initialDelayMs = 0,
 }: IrisBubbleProps) {
   const [visibleText, setVisibleText] = useState("");
-  const [irisState, setIrisState] = useState("iris · thinking");
-  const [isThinking, setIsThinking] = useState(true);
-  const [isReady, setIsReady] = useState(false);
+  const [irisState, setIrisState] = useState("iris · typing");
+  const [isThinking, setIsThinking] = useState(false);
+  const [hasAppeared, setHasAppeared] = useState(false);
   const [showCursor, setShowCursor] = useState(false);
   const fullMessageRef = useRef(message);
+  const isFirstMountRef = useRef(true);
 
   const skipToEnd = useCallback(() => {
+    if (!fullMessageRef.current) return;
     setIsThinking(false);
-    setIsReady(true);
+    setHasAppeared(true);
     setVisibleText(fullMessageRef.current);
     setShowCursor(false);
     setIrisState("iris · listening");
@@ -33,17 +35,14 @@ export default function IrisBubble({
   useEffect(() => {
     fullMessageRef.current = message;
     setVisibleText("");
-    setIsThinking(true);
-    setIsReady(false);
     setShowCursor(false);
-    setIrisState("iris · thinking");
 
     let thinkingTimer: ReturnType<typeof setTimeout> | undefined;
     let typeTimer: ReturnType<typeof setInterval> | undefined;
 
     const startTyping = () => {
       setIsThinking(false);
-      setIsReady(true);
+      setHasAppeared(true);
       setIrisState("iris · typing");
       setShowCursor(true);
 
@@ -59,13 +58,19 @@ export default function IrisBubble({
       }, 28);
     };
 
-    const leadIn = initialDelayMs + delayMs;
-    const startTimer = setTimeout(() => {
+    const beginThinking = () => {
+      setIrisState("iris · thinking");
+      setIsThinking(true);
       thinkingTimer = setTimeout(startTyping, 300);
-    }, leadIn);
+    };
+
+    const leadIn = isFirstMountRef.current ? initialDelayMs + delayMs : delayMs;
+    isFirstMountRef.current = false;
+
+    const startTimer = setTimeout(beginThinking, leadIn);
 
     return () => {
-      if (startTimer) clearTimeout(startTimer);
+      clearTimeout(startTimer);
       if (thinkingTimer) clearTimeout(thinkingTimer);
       if (typeTimer) clearInterval(typeTimer);
     };
@@ -73,7 +78,13 @@ export default function IrisBubble({
 
   return (
     <div
-      className={`bubble${isThinking ? " is-thinking" : ""}${isReady ? " is-ready" : ""}`}
+      className={[
+        "bubble",
+        isThinking ? "is-thinking" : "",
+        hasAppeared ? "is-visible" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       aria-live="polite"
       onClick={skipToEnd}
       onKeyDown={(event) => {
@@ -96,7 +107,7 @@ export default function IrisBubble({
       </div>
       <p>
         <span>{visibleText}</span>
-        {showCursor ? <span className="cursor" aria-hidden="true" /> : null}
+        {showCursor ? <span className="cursor" id="cursor" aria-hidden="true" /> : null}
       </p>
     </div>
   );

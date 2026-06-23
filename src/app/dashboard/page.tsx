@@ -1,7 +1,8 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-import DashboardContent from "@/components/DashboardContent";
+import DashboardApp from "@/components/dashboard/DashboardApp";
+import type { StressorId } from "@/components/onboarding/constants";
 import { createServerClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +25,9 @@ export default async function DashboardPage() {
 
   const { data: user, error: userError } = await supabase
     .from("users")
-    .select("id")
+    .select(
+      "id, display_name, major, onboarding_stressors, iris_tone, context_bio, fear_context, briefing_time",
+    )
     .eq("clerk_id", userId)
     .single();
 
@@ -57,41 +60,37 @@ export default async function DashboardPage() {
   const isCanvasConnected =
     integrations?.some((i) => i.provider === "canvas") ?? false;
 
-  const { data: chatMessages } = await supabase
-    .from("chat_messages")
-    .select("role, content, created_at")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(10);
+  const stressors = Array.isArray(user.onboarding_stressors)
+    ? (user.onboarding_stressors as StressorId[])
+    : [];
 
-  const initialMessages = (chatMessages ?? [])
-    .reverse()
-    .filter(
-      (msg) =>
-        (msg.role === "user" || msg.role === "assistant") &&
-        typeof msg.content === "string",
-    )
-    .map((msg) => ({
-      role: msg.role as "user" | "assistant",
-      content: msg.content,
-    }));
+  const displayName =
+    user.display_name?.trim() ||
+    clerkUser.firstName?.trim() ||
+    clerkUser.username?.trim() ||
+    "Student";
 
   return (
-    <main className="mx-auto max-w-2xl p-8">
-      <DashboardContent
-        briefing={
-          briefing
-            ? {
-                content: briefing.content,
-                created_at: briefing.created_at,
-              }
-            : null
-        }
-        isGoogleConnected={isGoogleConnected}
-        isCanvasConnected={isCanvasConnected}
-        initialMessages={initialMessages}
-        irisUserId={user.id}
-      />
-    </main>
+    <DashboardApp
+      displayName={displayName}
+      major={user.major ?? ""}
+      irisTone={user.iris_tone ?? "unhinged"}
+      contextBio={user.context_bio ?? ""}
+      fearContext={user.fear_context ?? ""}
+      briefingTime={user.briefing_time ?? "09:00"}
+      stressors={stressors}
+      briefing={
+        briefing
+          ? {
+              content: briefing.content,
+              created_at: briefing.created_at,
+              raw_data: briefing.raw_data,
+            }
+          : null
+      }
+      isGoogleConnected={isGoogleConnected}
+      isCanvasConnected={isCanvasConnected}
+      irisUserId={user.id}
+    />
   );
 }

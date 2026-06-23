@@ -16,7 +16,8 @@ export function AppHeader() {
     pathname === "/" ||
     pathname.startsWith("/sign-in") ||
     pathname.startsWith("/sign-up") ||
-    pathname.startsWith("/onboarding")
+    pathname.startsWith("/onboarding") ||
+    pathname.startsWith("/dashboard")
   ) {
     return null;
   }
