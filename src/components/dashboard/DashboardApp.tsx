@@ -1,5 +1,6 @@
 "use client";
 
+import { useClerk } from "@clerk/nextjs";
 import {
   useCallback,
   useEffect,
@@ -66,6 +67,7 @@ export default function DashboardApp({
   isCanvasConnected,
   irisUserId,
 }: DashboardAppProps) {
+  const { signOut } = useClerk();
   const [view, setView] = useState<View>("iris");
   const [question, setQuestion] = useState("");
   const [activeSuggestion, setActiveSuggestion] = useState<number | null>(null);
@@ -323,6 +325,13 @@ export default function DashboardApp({
               <small>{irisTone} mode</small>
             </div>
           </div>
+          <button
+            type="button"
+            className="logout-btn"
+            onClick={() => signOut({ redirectUrl: "/" })}
+          >
+            log out
+          </button>
         </div>
       </aside>
 
