@@ -28,6 +28,7 @@ type View = "iris" | "integrations" | "settings";
 
 interface DashboardAppProps {
   displayName: string;
+  email: string;
   major: string;
   irisTone: string;
   contextBio: string;
@@ -56,6 +57,7 @@ function stressorIdFromLabel(label: string): StressorId | null {
 
 export default function DashboardApp({
   displayName: initialDisplayName,
+  email,
   major: initialMajor,
   irisTone: initialTone,
   contextBio: initialContextBio,
@@ -318,19 +320,17 @@ export default function DashboardApp({
             <i aria-hidden="true" />
             <span>{connectedCount} sources live</span>
           </div>
-          <div className="user">
-            <div className="avatar">{getInitials(displayName)}</div>
-            <div>
-              <b>{displayName || "Student"}</b>
-              <small>{irisTone} mode</small>
-            </div>
-          </div>
           <button
             type="button"
-            className="logout-btn"
+            className="user"
             onClick={() => signOut({ redirectUrl: "/" })}
+            title="Log out"
           >
-            log out
+            <div className="avatar">{getInitials(displayName)}</div>
+            <div className="user-meta">
+              <b>{displayName || "Student"}</b>
+              <small>{email}</small>
+            </div>
           </button>
         </div>
       </aside>

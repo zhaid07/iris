@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1280px;
+    height: 800px;
+    background: linear-gradient(135deg, #ede9ff 0%, #f5f3ff 40%, #e8f4ff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+    overflow: hidden;
+  }
+  .scene { display: flex; align-items: center; gap: 80px; }
+  .copy { max-width: 380px; }
+  .copy .badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(52,199,89,.12); color: #1a8a3c; border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.2px; margin-bottom: 20px; }
+  .copy h1 { font-size: 42px; font-weight: 700; color: #1d1d1f; line-height: 1.1; letter-spacing: -1px; margin-bottom: 16px; }
+  .copy h1 span { color: #5645d4; }
+  .copy p { font-size: 16px; color: #86868b; line-height: 1.6; }
+  .popup-wrap { filter: drop-shadow(0 24px 64px rgba(86,69,212,.22)) drop-shadow(0 4px 16px rgba(0,0,0,.1)); border-radius: 16px; }
+  .popup { width: 340px; background: #f8f7ff; color: #1d1d1f; border-radius: 16px; overflow: hidden; }
+  .header { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid rgba(86,69,212,.1); background: linear-gradient(135deg, #f3f0ff 0%, #fff 60%); }
+  .logo-mark { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #ede9ff, #f3f0ff); border: 1px solid rgba(86,69,212,.18); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .logo-mark img { width: 30px; height: 30px; object-fit: contain; }
+  .logo-text { flex: 1; }
+  .logo-text h2 { font-size: 14px; font-weight: 700; letter-spacing: -0.3px; color: #1d1d1f; }
+  .logo-text p { font-size: 11px; color: #5645d4; margin-top: 1px; font-weight: 500; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #34c759; }
+  .body { padding: 16px; background: #f8f7ff; }
+  .sync-status-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #86868b; margin-bottom: 12px; }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #34c759; }
+  .info-card { background: #fff; border: 1px solid rgba(86,69,212,.15); border-radius: 10px; padding: 12px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(86,69,212,.06); }
+  .info-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 3px 0; }
+  .info-row:not(:last-child) { border-bottom: 1px solid rgba(0,0,0,.05); padding-bottom: 7px; margin-bottom: 7px; }
+  .info-label { color: #86868b; font-weight: 500; }
+  .info-value { color: #1d1d1f; font-weight: 500; }
+  .btn-primary { width: 100%; padding: 9px 14px; background: #5645d4; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; box-shadow: 0 2px 8px rgba(86,69,212,.3); letter-spacing: -0.1px; }
+  .btn-secondary { width: 100%; padding: 9px 14px; background: transparent; color: #5645d4; border: 1px solid rgba(86,69,212,.25); border-radius: 8px; font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="scene">
+  <div class="copy">
+    <div class="badge">✓ Synced &amp; running</div>
+    <h1>Your briefing<br>is ready by <span>morning</span></h1>
+    <p>Iris checks Canvas for new assignments and announcements, then texts you a daily digest.</p>
+  </div>
+  <div class="popup-wrap">
+    <div class="popup">
+      <div class="header">
+        <div class="logo-mark"><img src="iris-mascot.png" alt="Iris"></div>
+        <div class="logo-text"><h2>Iris</h2><p>Academic assistant</p></div>
+        <div class="status-dot"></div>
+      </div>
+      <div class="body">
+        <div class="sync-status-row">
+          <div class="sync-dot"></div>
+          <span>Synced 14m ago</span>
+        </div>
+        <div class="info-card">
+          <div class="info-row">
+            <span class="info-label">Canvas</span>
+            <span class="info-value">cole2.uconline.edu</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">User ID</span>
+            <span class="info-value">d76b6200…5f82</span>
+          </div>
+        </div>
+        <button class="btn-primary">Sync now</button>
+        <button class="btn-secondary">Edit settings</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

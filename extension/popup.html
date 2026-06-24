@@ -270,78 +270,6 @@
         line-height: 1.5;
       }
 
-      /* ── Coming soon teaser ── */
-      .teaser {
-        margin-top: 14px;
-        border-top: 1px solid rgba(86,69,212,.1);
-        padding-top: 14px;
-      }
-
-      .teaser-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 4px;
-      }
-
-      .teaser-title {
-        font-size: 12px;
-        font-weight: 600;
-        color: #1d1d1f;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-      }
-
-      .coming-soon-badge {
-        font-size: 10px;
-        font-weight: 600;
-        color: #5645d4;
-        background: rgba(86,69,212,.1);
-        border: 1px solid rgba(86,69,212,.2);
-        border-radius: 999px;
-        padding: 2px 8px;
-      }
-
-      .teaser-desc {
-        font-size: 11px;
-        color: #86868b;
-        line-height: 1.4;
-        margin-bottom: 10px;
-      }
-
-      .radio-group {
-        display: flex;
-        gap: 8px;
-        margin-top: 2px;
-      }
-
-      .radio-option {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        cursor: pointer;
-        padding: 6px 14px;
-        border: 1px solid rgba(86,69,212,.2);
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 500;
-        color: #86868b;
-        background: #fff;
-        transition: all 0.15s;
-        user-select: none;
-      }
-
-      .radio-option input[type="radio"] {
-        display: none;
-      }
-
-      .radio-option:has(input:checked) {
-        background: rgba(86,69,212,.1);
-        border-color: #5645d4;
-        color: #5645d4;
-      }
-
       /* ── Util ── */
       .hidden { display: none !important; }
     </style>
@@ -375,11 +303,6 @@
 
         <p id="form-error" class="error-msg hidden"></p>
         <button type="button" id="save-btn" class="btn-primary">Connect Canvas</button>
-
-        <div class="teaser">
-          <span class="teaser-title">🏫 Multiple organizations</span>
-          <span class="coming-soon-badge">Coming soon</span>
-        </div>
       </div>
 
       <!-- Success view -->
@@ -388,24 +311,6 @@
           <div class="success-icon">✓</div>
           <h2>Canvas connected</h2>
           <p>Iris is syncing your courses and assignments in the background.</p>
-        </div>
-
-        <div class="teaser">
-          <div class="teaser-header">
-            <span class="teaser-title">🏫 Multiple organizations</span>
-            <span class="coming-soon-badge">Coming soon</span>
-          </div>
-          <p class="teaser-desc">Do you use Canvas at more than one school (e.g. a community college and a university)?</p>
-          <div class="radio-group">
-            <label class="radio-option">
-              <input type="radio" name="multi-org-success" value="yes" />
-              Yes
-            </label>
-            <label class="radio-option">
-              <input type="radio" name="multi-org-success" value="no" />
-              No
-            </label>
-          </div>
         </div>
       </div>
 
@@ -429,24 +334,6 @@
 
         <button type="button" id="sync-now-btn" class="btn-primary">Sync now</button>
         <button type="button" id="edit-btn" class="btn-secondary">Edit settings</button>
-
-        <div class="teaser">
-          <div class="teaser-header">
-            <span class="teaser-title">🏫 Multiple organizations</span>
-            <span class="coming-soon-badge">Coming soon</span>
-          </div>
-          <p class="teaser-desc">Do you use Canvas at more than one school (e.g. a community college and a university)?</p>
-          <div class="radio-group">
-            <label class="radio-option">
-              <input type="radio" name="multi-org-configured" value="yes" />
-              Yes
-            </label>
-            <label class="radio-option">
-              <input type="radio" name="multi-org-configured" value="no" />
-              No
-            </label>
-          </div>
-        </div>
       </div>
 
     </div>

@@ -102,6 +102,32 @@ saveBtn.addEventListener("click", async () => {
   saveBtn.textContent = "Connecting…";
 
   try {
+    // Request permission for their specific Canvas domain
+    const granted = await chrome.permissions.request({
+      origins: [`https://${canvasDomain}/*`]
+    });
+
+    if (!granted) {
+      showFormError("Canvas permission is required to sync.");
+      return;
+    }
+
+    // Verify it's actually a Canvas instance and they're logged in
+    let testRes;
+    try {
+      testRes = await fetch(`https://${canvasDomain}/api/v1/users/self`, {
+        credentials: "include"
+      });
+    } catch {
+      showFormError("Couldn't reach that domain. Check your Canvas URL.");
+      return;
+    }
+
+    if (!testRes.ok) {
+      showFormError("Couldn't verify Canvas. Make sure you're logged into Canvas first.");
+      return;
+    }
+
     await chrome.storage.local.set({ canvasDomain, userId, justSaved: true });
     chrome.runtime.sendMessage({ type: "sync-now" });
     setHeaderDot("syncing");

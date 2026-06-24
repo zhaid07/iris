@@ -70,9 +70,15 @@ export default async function DashboardPage() {
     clerkUser.username?.trim() ||
     "Student";
 
+  const email =
+    clerkUser.emailAddresses[0]?.emailAddress ??
+    clerkUser.primaryEmailAddress?.emailAddress ??
+    "";
+
   return (
     <DashboardApp
       displayName={displayName}
+      email={email}
       major={user.major ?? ""}
       irisTone={user.iris_tone ?? "unhinged"}
       contextBio={user.context_bio ?? ""}
