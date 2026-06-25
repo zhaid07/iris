@@ -79,6 +79,9 @@ export default function DashboardApp({
 }: DashboardAppProps) {
   const { signOut } = useClerk();
   const [view, setView] = useState<View>("iris");
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const [question, setQuestion] = useState("");
   const [activeSuggestion, setActiveSuggestion] = useState<number | null>(null);
   const [irisState, setIrisState] = useState("Listening");
@@ -308,6 +311,37 @@ export default function DashboardApp({
     };
   }, []);
 
+  useEffect(() => {
+    if (!userMenuOpen) return;
+
+    function closeMenu(event: MouseEvent) {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
+        setUserMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", closeMenu);
+    return () => document.removeEventListener("mousedown", closeMenu);
+  }, [userMenuOpen]);
+
+  const handleLogout = useCallback(async () => {
+    if (isSigningOut) return;
+
+    setIsSigningOut(true);
+    setUserMenuOpen(false);
+
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Sign out failed:", error);
+    } finally {
+      window.location.assign("/");
+    }
+  }, [isSigningOut, signOut]);
+
   const sendReady = question.trim().length > 0;
 
   return (
@@ -356,18 +390,34 @@ export default function DashboardApp({
             <i aria-hidden="true" />
             <span>{connectedCount} sources live</span>
           </div>
-          <button
-            type="button"
-            className="user"
-            onClick={() => signOut({ redirectUrl: "/" })}
-            title="Log out"
-          >
-            <div className="avatar">{getInitials(displayName)}</div>
-            <div className="user-meta">
-              <b>{displayName || "Student"}</b>
-              <small>{email}</small>
-            </div>
-          </button>
+          <div className="user-wrap" ref={userMenuRef}>
+            {userMenuOpen && (
+              <div className="user-menu" role="menu" aria-label="Account menu">
+                <button
+                  type="button"
+                  className="user-menu-item"
+                  role="menuitem"
+                  disabled={isSigningOut}
+                  onClick={handleLogout}
+                >
+                  {isSigningOut ? "logging out…" : "log out"}
+                </button>
+              </div>
+            )}
+            <button
+              type="button"
+              className={`user${userMenuOpen ? " open" : ""}`}
+              aria-expanded={userMenuOpen}
+              aria-haspopup="menu"
+              onClick={() => setUserMenuOpen((open) => !open)}
+            >
+              <div className="avatar">{getInitials(displayName)}</div>
+              <div className="user-meta">
+                <b>{displayName || "Student"}</b>
+                <small>{email}</small>
+              </div>
+            </button>
+          </div>
         </div>
       </aside>
 

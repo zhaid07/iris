@@ -35,6 +35,9 @@ button.user {
   background: transparent;
   text-align: left;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   transition: transform 0.22s var(--ease), opacity 0.2s;
 }
 button.user:hover {
@@ -51,6 +54,51 @@ button.user small {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 130px;
+}
+.user-wrap {
+  position: relative;
+  margin-top: 15px;
+}
+.user-wrap button.user {
+  margin-top: 0;
+}
+button.user.open {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 12px;
+  padding: 6px;
+}
+.user-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 8px);
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 12px 30px rgba(40, 32, 104, 0.12);
+  z-index: 30;
+}
+.user-menu-item {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 11px;
+  background: transparent;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.18s var(--ease), color 0.18s var(--ease);
+}
+.user-menu-item:hover:not(:disabled) {
+  background: #fff0f1;
+  color: #b42318;
+}
+.user-menu-item:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 :root{
       --canvas:#f5f5f7;--surface:rgba(255,255,255,.88);--ink:#1d1d1f;--muted:#85858c;
