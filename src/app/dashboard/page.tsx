@@ -26,7 +26,7 @@ export default async function DashboardPage() {
   const { data: user, error: userError } = await supabase
     .from("users")
     .select(
-      "id, display_name, major, onboarding_stressors, iris_tone, context_bio, fear_context, briefing_time",
+      "id, display_name, major, onboarding_stressors, iris_tone, context_bio, fear_context, briefing_time, briefing_enabled, deadline_interventions, low_stakes_reminders",
     )
     .eq("clerk_id", userId)
     .single();
@@ -59,6 +59,8 @@ export default async function DashboardPage() {
     integrations?.some((i) => i.provider === "google") ?? false;
   const isCanvasConnected =
     integrations?.some((i) => i.provider === "canvas") ?? false;
+  const isGradescopeConnected =
+    integrations?.some((i) => i.provider === "gradescope") ?? false;
 
   const stressors = Array.isArray(user.onboarding_stressors)
     ? (user.onboarding_stressors as StressorId[])
@@ -84,6 +86,9 @@ export default async function DashboardPage() {
       contextBio={user.context_bio ?? ""}
       fearContext={user.fear_context ?? ""}
       briefingTime={user.briefing_time ?? "09:00"}
+      briefingEnabled={user.briefing_enabled ?? true}
+      deadlineInterventions={user.deadline_interventions ?? true}
+      lowStakesReminders={user.low_stakes_reminders ?? false}
       stressors={stressors}
       briefing={
         briefing
@@ -96,6 +101,7 @@ export default async function DashboardPage() {
       }
       isGoogleConnected={isGoogleConnected}
       isCanvasConnected={isCanvasConnected}
+      isGradescopeConnected={isGradescopeConnected}
       irisUserId={user.id}
     />
   );

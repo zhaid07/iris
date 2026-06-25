@@ -57,6 +57,38 @@ export const FEAR_TRIGGER_IDS: StressorId[] = [
   "job_after_graduation",
 ];
 
+export type EmailPriorityId =
+  | "professors_tas"
+  | "career_internships"
+  | "financial_aid"
+  | "advisor_registration"
+  | "clubs_orgs"
+  | "campus_deadlines";
+
+export type ClassDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+
+export const EMAIL_PRIORITY_OPTIONS: {
+  id: EmailPriorityId;
+  label: string;
+}[] = [
+  { id: "professors_tas", label: "professors & TAs" },
+  { id: "career_internships", label: "career & internships" },
+  { id: "financial_aid", label: "financial aid" },
+  { id: "advisor_registration", label: "advisor & registration" },
+  { id: "clubs_orgs", label: "clubs & orgs" },
+  { id: "campus_deadlines", label: "campus deadlines" },
+];
+
+export const CLASS_DAYS: { id: ClassDay; label: string }[] = [
+  { id: "mon", label: "Mon" },
+  { id: "tue", label: "Tue" },
+  { id: "wed", label: "Wed" },
+  { id: "thu", label: "Thu" },
+  { id: "fri", label: "Fri" },
+  { id: "sat", label: "Sat" },
+  { id: "sun", label: "Sun" },
+];
+
 export type IrisTone = "friend" | "unhinged";
 
 export const TONE_OPTIONS: {
@@ -158,24 +190,36 @@ export function getDogMessage(
       };
     case 4:
       return {
-        text: "iris is a funny, unhinged dog. i can cuss and call u out like a real friend, but if u tell me not to, i won't. how should i talk to u?",
+        text: "ok so what actually lands in ur inbox that matters",
       };
     case 5:
       return {
-        text: `ok ${name}. tell me who u actually are. the more u say the more targeted i get. this isn't a bio. it is context my algorithm uses to prioritize for u.`,
+        text: "iris is a funny, unhinged dog. i can cuss and call u out like a real friend, but if u tell me not to, i won't. how should i talk to u?",
       };
     case 6:
+      return {
+        text: `ok ${name}. tell me who u actually are. the more u say the more targeted i get. this isn't a bio. it is context my algorithm uses to prioritize for u.`,
+      };
+    case 7:
       return {
         text: `hey. u mentioned ${getFearStressorLabel(data.stressors)}. most apps just skip past that. what's the thing that actually scares u that we didn't ask about?`,
         delayMs: 900,
       };
-    case 7:
-      return { text: "when should i text u every morning?" };
     case 8:
+      return {
+        text: "let me see ur week so i know when u actually have time",
+      };
+    case 9:
+      return {
+        text: "ok drop the syllabi, i'll do the reading so u don't have to",
+      };
+    case 10:
+      return { text: "when should i text u every morning?" };
+    case 11:
       return {
         text: "almost there. install the extension so i can see ur canvas. it securely connects school context to ur iris account and only reads what i need to catch deadlines and conflicts.",
       };
-    case 9:
+    case 12:
       return { text: `ok ${name}. we're locked in. let's go.` };
     default:
       return { text: "" };

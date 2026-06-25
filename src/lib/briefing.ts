@@ -1,6 +1,10 @@
 // Server-only — do not import in client components
 
-import { generateBriefing, type BriefingData } from "@/lib/ai";
+import {
+  generateBriefing,
+  splitBriefingOutput,
+  type BriefingData,
+} from "@/lib/ai";
 import { fetchCanvasData } from "@/lib/canvas";
 import { fetchGoogleData } from "@/lib/google";
 import { sendBriefing } from "@/lib/notifications";
@@ -121,10 +125,10 @@ export async function generateBriefingForUser(userId: string): Promise<void> {
       events: googleData.events,
     };
 
-    let briefingText: string;
+    let fullBriefing: string;
 
     try {
-      briefingText = await generateBriefing(data, {
+      fullBriefing = await generateBriefing(data, {
         display_name: user.display_name,
         major: user.major,
         onboarding_stressors: Array.isArray(user.onboarding_stressors)
@@ -139,9 +143,14 @@ export async function generateBriefingForUser(userId: string): Promise<void> {
       throw new Error(`Failed to generate briefing: ${error instanceof Error ? error.message : String(error)}`);
     }
 
+    const { dashboard: briefingText, sms: smsText } =
+      splitBriefingOutput(fullBriefing);
+
     const hasPhone = Boolean(user.phone_number?.trim());
 
-    if (hasPhone) {
+    if (hasPhone && smsText) {
+      await sendBriefing(user.phone_number!, smsText.slice(0, 300));
+    } else if (hasPhone) {
       await sendBriefing(user.phone_number!, briefingText);
     }
 

@@ -13,6 +13,8 @@ import OnboardingShell from "@/components/onboarding/OnboardingShell";
 import {
   BRIEFING_OPTIONS,
   briefingChoiceToTime,
+  CLASS_DAYS,
+  EMAIL_PRIORITY_OPTIONS,
   getDogMessage,
   MAJORS,
   shouldShowFearStep,
@@ -21,6 +23,8 @@ import {
   TONE_OPTIONS,
   WALKTHROUGH_STEPS,
   type BriefingChoice,
+  type ClassDay,
+  type EmailPriorityId,
   type IrisTone,
   type Major,
   type StressorId,
@@ -31,15 +35,26 @@ interface OnboardingFlowProps {
   defaultName?: string;
 }
 
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+
+interface SyllabusFileItem {
+  id: string;
+  file: File;
+  courseName: string;
+}
 
 interface OnboardingData {
   displayName: string;
   major: Major | "";
   stressors: StressorId[];
+  emailPriorities: EmailPriorityId[];
+  emailPrioritiesOther: string;
   irisTone: IrisTone | "";
   contextBio: string;
   fearContext: string;
+  classDays: ClassDay[];
+  scheduleContext: string;
+  syllabusFiles: SyllabusFileItem[];
   briefingChoice: BriefingChoice | "";
   customBriefingTime: string;
 }
@@ -50,15 +65,21 @@ export default function OnboardingFlow({
 }: OnboardingFlowProps) {
   const router = useRouter();
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const syllabusInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<Step>(1);
   const [data, setData] = useState<OnboardingData>({
     displayName: defaultName,
     major: "",
     stressors: [],
+    emailPriorities: [],
+    emailPrioritiesOther: "",
     irisTone: "",
     contextBio: "",
     fearContext: "",
+    classDays: [],
+    scheduleContext: "",
+    syllabusFiles: [],
     briefingChoice: "",
     customBriefingTime: "08:00",
   });
@@ -66,6 +87,8 @@ export default function OnboardingFlow({
   const [loading, setLoading] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadWarning, setUploadWarning] = useState<string | null>(null);
+  const [syllabusDragging, setSyllabusDragging] = useState(false);
   const [dogJump, setDogJump] = useState(false);
   const [walkthroughStep, setWalkthroughStep] = useState(0);
   const [finishLabel, setFinishLabel] = useState("let's go →");
@@ -124,7 +147,7 @@ export default function OnboardingFlow({
   }, [step]);
 
   useEffect(() => {
-    if (step !== 9) return;
+    if (step !== 12) return;
 
     setDogJump(true);
     const timer = window.setTimeout(() => setDogJump(false), 800);
@@ -132,7 +155,7 @@ export default function OnboardingFlow({
   }, [step]);
 
   useEffect(() => {
-    if (step !== 8) return;
+    if (step !== 11) return;
 
     const timer = window.setInterval(() => {
       setWalkthroughStep((prev) => (prev + 1) % WALKTHROUGH_STEPS.length);
@@ -188,12 +211,113 @@ export default function OnboardingFlow({
     });
   }
 
+  function toggleEmailPriority(id: EmailPriorityId) {
+    setData((prev) => {
+      const has = prev.emailPriorities.includes(id);
+      const next = has
+        ? prev.emailPriorities.filter((item) => item !== id)
+        : [...prev.emailPriorities, id];
+      return { ...prev, emailPriorities: next };
+    });
+  }
+
+  function toggleClassDay(id: ClassDay) {
+    setData((prev) => {
+      const has = prev.classDays.includes(id);
+      const next = has
+        ? prev.classDays.filter((item) => item !== id)
+        : [...prev.classDays, id];
+      return { ...prev, classDays: next };
+    });
+  }
+
+  function addSyllabusFiles(files: FileList | File[]) {
+    const pdfs = Array.from(files).filter(
+      (file) =>
+        file.type === "application/pdf" ||
+        file.name.toLowerCase().endsWith(".pdf"),
+    );
+
+    if (!pdfs.length) return;
+
+    setData((prev) => ({
+      ...prev,
+      syllabusFiles: [
+        ...prev.syllabusFiles,
+        ...pdfs.map((file) => ({
+          id: crypto.randomUUID(),
+          file,
+          courseName: "",
+        })),
+      ],
+    }));
+  }
+
+  function removeSyllabusFile(id: string) {
+    setData((prev) => ({
+      ...prev,
+      syllabusFiles: prev.syllabusFiles.filter((item) => item.id !== id),
+    }));
+  }
+
+  function updateSyllabusCourseName(id: string, courseName: string) {
+    setData((prev) => ({
+      ...prev,
+      syllabusFiles: prev.syllabusFiles.map((item) =>
+        item.id === id
+          ? { ...item, courseName: courseName.slice(0, 60) }
+          : item,
+      ),
+    }));
+  }
+
+  async function handleSyllabusUpload() {
+    setLoading(true);
+    setError(null);
+    setUploadWarning(null);
+
+    let anyFailed = false;
+
+    for (const item of data.syllabusFiles) {
+      const formData = new FormData();
+      formData.append("file", item.file);
+      formData.append("courseName", item.courseName.trim());
+
+      try {
+        const res = await fetch("/api/onboarding/upload-syllabus", {
+          method: "POST",
+          body: formData,
+        });
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          anyFailed = true;
+        }
+      } catch {
+        anyFailed = true;
+      }
+    }
+
+    setLoading(false);
+
+    if (anyFailed) {
+      setUploadWarning(
+        "some syllabi couldn't be parsed — you can re-upload later",
+      );
+    }
+
+    advanceLocal(10);
+  }
+
+  const canUploadSyllabus =
+    data.syllabusFiles.length > 0 &&
+    data.syllabusFiles.every((item) => item.courseName.trim().length > 0);
+
   function nextAfterPersonalization() {
     const patch = { contextBio: data.contextBio.trim() };
     if (shouldShowFearStep(data.stressors)) {
-      goNext(patch, 6);
-    } else {
       goNext(patch, 7);
+    } else {
+      goNext(patch, 8);
     }
   }
 
@@ -328,6 +452,63 @@ export default function OnboardingFlow({
 
       {step === 4 && (
         <>
+          <h1 className="title">what emails actually matter to you?</h1>
+          <p className="sub">iris will ignore everything else.</p>
+          <div className="pills">
+            {EMAIL_PRIORITY_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className={`pill${
+                  data.emailPriorities.includes(option.id) ? " selected" : ""
+                }`}
+                onClick={() => toggleEmailPriority(option.id)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <p className="note">anything else?</p>
+          <div className="field-row">
+            <input
+              className="line-input"
+              maxLength={100}
+              placeholder="e.g. research lab, housing office, greek life..."
+              aria-label="Anything else"
+              value={data.emailPrioritiesOther}
+              onChange={(event) =>
+                setData((prev) => ({
+                  ...prev,
+                  emailPrioritiesOther: event.target.value.slice(0, 100),
+                }))
+              }
+            />
+          </div>
+          <div className="actions">
+            <span />
+            <button
+              type="button"
+              className="primary"
+              disabled={loading || data.emailPriorities.length === 0}
+              onClick={() =>
+                goNext(
+                  {
+                    emailPriorities: data.emailPriorities,
+                    emailPrioritiesOther: data.emailPrioritiesOther.trim(),
+                  },
+                  5,
+                )
+              }
+            >
+              that&apos;s what matters →
+            </button>
+          </div>
+          {error && <p className="ob-error">{error}</p>}
+        </>
+      )}
+
+      {step === 5 && (
+        <>
           <h1 className="title">how human should iris sound?</h1>
           <p className="sub">
             The algorithm stays the same. This only changes how Iris delivers
@@ -348,7 +529,7 @@ export default function OnboardingFlow({
                 onClick={() => {
                   setData((prev) => ({ ...prev, irisTone: tone.id }));
                   window.setTimeout(
-                    () => goNext({ irisTone: tone.id }, 5),
+                    () => goNext({ irisTone: tone.id }, 6),
                     260,
                   );
                 }}
@@ -366,7 +547,7 @@ export default function OnboardingFlow({
         </>
       )}
 
-      {step === 5 && (
+      {step === 6 && (
         <>
           <h1 className="title">give Iris the context apps usually miss.</h1>
           <div className="textarea-wrap">
@@ -402,7 +583,7 @@ export default function OnboardingFlow({
         </>
       )}
 
-      {step === 6 && (
+      {step === 7 && (
         <>
           <h1 className="title">the thing underneath the thing.</h1>
           <div className="textarea-wrap">
@@ -427,7 +608,7 @@ export default function OnboardingFlow({
               type="button"
               className="quiet"
               disabled={loading}
-              onClick={() => goNext({ fearContext: null }, 7)}
+              onClick={() => goNext({ fearContext: null }, 8)}
             >
               skip this
             </button>
@@ -440,7 +621,7 @@ export default function OnboardingFlow({
                   {
                     fearContext: data.fearContext.trim() || null,
                   },
-                  7,
+                  8,
                 )
               }
             >
@@ -451,7 +632,180 @@ export default function OnboardingFlow({
         </>
       )}
 
-      {step === 7 && (
+      {step === 8 && (
+        <>
+          <h1 className="title">when do you have class?</h1>
+          <p className="sub">iris uses this to find your actual free time.</p>
+          <div className="pills">
+            {CLASS_DAYS.map((day) => (
+              <button
+                key={day.id}
+                type="button"
+                className={`pill${
+                  data.classDays.includes(day.id) ? " selected" : ""
+                }`}
+                onClick={() => toggleClassDay(day.id)}
+              >
+                {day.label}
+              </button>
+            ))}
+          </div>
+          <div className="uuid-row">
+            <span>
+              sync Google Calendar so iris knows your exact free blocks —
+              otherwise she&apos;s guessing.
+            </span>
+          </div>
+          <div className="install-actions">
+            <a className="primary" href="/api/auth/google">
+              connect Google Calendar →
+            </a>
+            <button type="button" className="quiet" disabled={loading}>
+              skip for now →
+            </button>
+          </div>
+          <p className="note">anything else about your schedule?</p>
+          <div className="textarea-wrap">
+            <textarea
+              id="schedule"
+              maxLength={150}
+              placeholder="e.g. I commute 2hrs on Tuesdays, I work Monday nights..."
+              value={data.scheduleContext}
+              onChange={(event) =>
+                setData((prev) => ({
+                  ...prev,
+                  scheduleContext: event.target.value.slice(0, 150),
+                }))
+              }
+            />
+            <span className="counter">{data.scheduleContext.length}/150</span>
+          </div>
+          <div className="actions">
+            <span />
+            <button
+              type="button"
+              className="primary"
+              disabled={loading}
+              onClick={() =>
+                goNext(
+                  {
+                    classDays: data.classDays,
+                    scheduleContext: data.scheduleContext.trim(),
+                  },
+                  9,
+                )
+              }
+            >
+              looks right →
+            </button>
+          </div>
+          {error && <p className="ob-error">{error}</p>}
+        </>
+      )}
+
+      {step === 9 && (
+        <>
+          <h1 className="title">drop your syllabi here.</h1>
+          <p className="sub">
+            iris reads them once and never asks again — it&apos;s how she knows
+            what&apos;s actually worth points.
+          </p>
+          <input
+            ref={syllabusInputRef}
+            className="syllabus-hidden-input"
+            type="file"
+            accept=".pdf,application/pdf"
+            multiple
+            onChange={(event) => {
+              if (event.target.files?.length) {
+                addSyllabusFiles(event.target.files);
+              }
+              event.target.value = "";
+            }}
+          />
+          <div
+            className={`syllabus-drop${
+              syllabusDragging ? " is-dragging" : ""
+            }`}
+            role="button"
+            tabIndex={0}
+            onClick={() => syllabusInputRef.current?.click()}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                syllabusInputRef.current?.click();
+              }
+            }}
+            onDragOver={(event) => {
+              event.preventDefault();
+              setSyllabusDragging(true);
+            }}
+            onDragLeave={() => setSyllabusDragging(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setSyllabusDragging(false);
+              if (event.dataTransfer.files?.length) {
+                addSyllabusFiles(event.dataTransfer.files);
+              }
+            }}
+          >
+            {data.syllabusFiles.length === 0
+              ? "drag syllabi here or click to upload"
+              : "add more syllabi"}
+          </div>
+          {data.syllabusFiles.length > 0 && (
+            <div className="syllabus-list">
+              {data.syllabusFiles.map((item) => (
+                <div key={item.id} className="syllabus-item">
+                  <div className="syllabus-item-head">
+                    <span>{item.file.name}</span>
+                    <button
+                      type="button"
+                      className="syllabus-remove"
+                      aria-label={`Remove ${item.file.name}`}
+                      onClick={() => removeSyllabusFile(item.id)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <input
+                    className="syllabus-course-input"
+                    type="text"
+                    maxLength={60}
+                    placeholder="course name e.g. MATH 101"
+                    value={item.courseName}
+                    onChange={(event) =>
+                      updateSyllabusCourseName(item.id, event.target.value)
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="install-actions">
+            <button
+              type="button"
+              className="primary"
+              disabled={loading || !canUploadSyllabus}
+              onClick={handleSyllabusUpload}
+            >
+              upload &amp; continue →
+            </button>
+            <button
+              type="button"
+              className="quiet"
+              disabled={loading}
+              onClick={() => advanceLocal(10)}
+            >
+              skip for now →
+            </button>
+          </div>
+          {uploadWarning && <p className="note">{uploadWarning}</p>}
+          {error && <p className="ob-error">{error}</p>}
+        </>
+      )}
+
+      {step === 10 && (
         <>
           <h1 className="title">how early can Iris bother you?</h1>
           <p className="sub">
@@ -509,7 +863,7 @@ export default function OnboardingFlow({
                       data.customBriefingTime,
                     ),
                   },
-                  8,
+                  11,
                 )
               }
             >
@@ -520,7 +874,7 @@ export default function OnboardingFlow({
         </>
       )}
 
-      {step === 8 && (
+      {step === 11 && (
         <>
           <h1 className="title">give the dog eyes. securely.</h1>
           <p className="sub">
@@ -572,8 +926,9 @@ export default function OnboardingFlow({
             <div className="install-actions">
               <a
                 className="primary"
-                href="#"
-                onClick={(event) => event.preventDefault()}
+                href="https://chromewebstore.google.com/detail/Iris%20for%20Canvas/dinnphngemkaeiflfgcjccpnlcboodmc"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 open Chrome Web Store ↗
               </a>
@@ -581,7 +936,7 @@ export default function OnboardingFlow({
                 type="button"
                 className="quiet"
                 disabled={loading}
-                onClick={() => advanceLocal(9)}
+                onClick={() => advanceLocal(12)}
               >
                 done, it&apos;s installed →
               </button>
@@ -591,7 +946,7 @@ export default function OnboardingFlow({
         </>
       )}
 
-      {step === 9 && (
+      {step === 12 && (
         <>
           <h1 className="title">your life now has a watchdog.</h1>
           <p className="sub">Tomorrow morning looks a little more like this:</p>

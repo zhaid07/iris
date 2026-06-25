@@ -1,10 +1,51 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
-import { generateChatResponse, type ChatMessage } from "@/lib/ai";
+import { generateChatResponse, getChatDailyLimitMessage, type ChatMessage } from "@/lib/ai";
 import { createServerClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
+
+const EMPTY_RAW_DATA = {
+  assignments: [],
+  announcements: [],
+  emails: [],
+  events: [],
+};
+
+const DAILY_CHAT_LIMIT = 3;
+
+function startOfUtcDay(): string {
+  const now = new Date();
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  ).toISOString();
+}
+
+function getSourcesUsed(rawData: Record<string, unknown>): string[] {
+  const sources: string[] = [];
+
+  const assignments = Array.isArray(rawData.assignments)
+    ? rawData.assignments
+    : [];
+  const announcements = Array.isArray(rawData.announcements)
+    ? rawData.announcements
+    : [];
+  const emails = Array.isArray(rawData.emails) ? rawData.emails : [];
+  const events = Array.isArray(rawData.events) ? rawData.events : [];
+
+  if (assignments.length > 0 || announcements.length > 0) {
+    sources.push("Canvas");
+  }
+  if (emails.length > 0) {
+    sources.push("Gmail");
+  }
+  if (events.length > 0) {
+    sources.push("Calendar");
+  }
+
+  return sources;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -44,6 +85,31 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const { count: questionsToday, error: countError } = await supabase
+      .from("chat_messages")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("role", "user")
+      .gte("created_at", startOfUtcDay());
+
+    if (countError) {
+      console.error("Failed to count daily chat messages:", countError);
+      return NextResponse.json(
+        { success: false, error: "Failed to check chat limit" },
+        { status: 500 },
+      );
+    }
+
+    if ((questionsToday ?? 0) >= DAILY_CHAT_LIMIT) {
+      const limitMessage = getChatDailyLimitMessage(user.iris_tone);
+      return NextResponse.json({
+        success: true,
+        response: limitMessage,
+        sourcesUsed: [],
+        limitReached: true,
+      });
+    }
+
     const { data: briefing, error: briefingError } = await supabase
       .from("briefings")
       .select("content, raw_data")
@@ -52,12 +118,22 @@ export async function POST(req: NextRequest) {
       .limit(1)
       .maybeSingle();
 
-    if (briefingError || !briefing) {
+    if (briefingError) {
+      console.error("Failed to fetch latest briefing:", briefingError);
       return NextResponse.json(
-        { success: false, error: "No briefing found" },
-        { status: 404 },
+        { success: false, error: "Failed to fetch context" },
+        { status: 500 },
       );
     }
+
+    const rawData =
+      briefing && briefing.raw_data && typeof briefing.raw_data === "object"
+        ? (briefing.raw_data as Record<string, unknown>)
+        : EMPTY_RAW_DATA;
+    const briefingContent =
+      briefing && typeof briefing.content === "string" && briefing.content.trim()
+        ? briefing.content
+        : "No briefing generated yet. Use available context only.";
 
     const { data: recentMessages, error: messagesError } = await supabase
       .from("chat_messages")
@@ -87,7 +163,7 @@ export async function POST(req: NextRequest) {
     try {
       response = await generateChatResponse(
         [...history, { role: "user", content: message }],
-        { briefing: briefing.content, rawData: briefing.raw_data },
+        { briefing: briefingContent, rawData },
         {
           display_name: user.display_name,
           major: user.major,
@@ -139,7 +215,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ success: true, response });
+    return NextResponse.json({
+      success: true,
+      response,
+      sourcesUsed: getSourcesUsed(rawData),
+    });
   } catch (error) {
     console.error("Chat route error:", error);
     return NextResponse.json(

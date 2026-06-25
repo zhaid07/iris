@@ -34,6 +34,9 @@ interface DashboardAppProps {
   contextBio: string;
   fearContext: string;
   briefingTime: string;
+  briefingEnabled: boolean;
+  deadlineInterventions: boolean;
+  lowStakesReminders: boolean;
   stressors: StressorId[];
   briefing: {
     content: string;
@@ -42,6 +45,7 @@ interface DashboardAppProps {
   } | null;
   isGoogleConnected: boolean;
   isCanvasConnected: boolean;
+  isGradescopeConnected: boolean;
   irisUserId: string;
 }
 
@@ -63,10 +67,14 @@ export default function DashboardApp({
   contextBio: initialContextBio,
   fearContext: initialFearContext,
   briefingTime: initialBriefingTime,
+  briefingEnabled: initialBriefingEnabled,
+  deadlineInterventions: initialDeadlineInterventions,
+  lowStakesReminders: initialLowStakesReminders,
   stressors: initialStressors,
   briefing,
   isGoogleConnected,
   isCanvasConnected,
+  isGradescopeConnected: initialIsGradescopeConnected,
   irisUserId,
 }: DashboardAppProps) {
   const { signOut } = useClerk();
@@ -89,8 +97,10 @@ export default function DashboardApp({
 
   const [displayName, setDisplayName] = useState(initialDisplayName);
   const [major, setMajor] = useState(initialMajor || "Engineering");
-  const [irisTone, setIrisTone] = useState<"friend" | "unhinged">(
-    initialTone === "friend" ? "friend" : "unhinged",
+  const [irisTone, setIrisTone] = useState<"nice" | "friend" | "unhinged">(
+    initialTone === "nice" || initialTone === "friend" || initialTone === "unhinged"
+      ? initialTone
+      : "unhinged",
   );
   const [contextBio, setContextBio] = useState(initialContextBio);
   const [fearContext, setFearContext] = useState(initialFearContext);
@@ -100,10 +110,14 @@ export default function DashboardApp({
   const [stressors, setStressors] = useState<StressorId[]>(initialStressors);
   const [savedLabel, setSavedLabel] = useState("saved");
 
-  const [gradescopeConnected, setGradescopeConnected] = useState(false);
-  const [briefingEnabled, setBriefingEnabled] = useState(true);
-  const [deadlineInterventions, setDeadlineInterventions] = useState(true);
-  const [lowStakes, setLowStakes] = useState(false);
+  const [gradescopeConnected, setGradescopeConnected] = useState(
+    initialIsGradescopeConnected,
+  );
+  const [briefingEnabled, setBriefingEnabled] = useState(initialBriefingEnabled);
+  const [deadlineInterventions, setDeadlineInterventions] = useState(
+    initialDeadlineInterventions,
+  );
+  const [lowStakes, setLowStakes] = useState(initialLowStakesReminders);
 
   const questionRef = useRef<HTMLInputElement>(null);
   const typeTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -112,8 +126,7 @@ export default function DashboardApp({
 
   const connectedCount =
     (isGoogleConnected ? 2 : 0) +
-    (isCanvasConnected ? 2 : 0) +
-    (gradescopeConnected ? 1 : 0);
+    (isCanvasConnected ? 2 : 0);
   const missingCount = TOTAL_SOURCES - connectedCount;
 
   const debriefItems: DebriefItem[] = getDebriefItems(
@@ -188,7 +201,11 @@ export default function DashboardApp({
           if (index >= text.length && typeTimerRef.current) {
             clearInterval(typeTimerRef.current);
             setIrisState("Listening");
-            setTraceItems(["Canvas", "Gradebook", "Calendar", "Gmail"]);
+            setTraceItems(
+              Array.isArray(data.sourcesUsed) && data.sourcesUsed.length > 0
+                ? data.sourcesUsed
+                : ["context"],
+            );
           }
         }, 18);
       }, 550);
@@ -237,6 +254,25 @@ export default function DashboardApp({
       window.setTimeout(() => setCopied(false), 1500);
     } catch {
       showToast("copy failed");
+    }
+  }
+
+  async function handleGradescopeToggle() {
+    const next = !gradescopeConnected;
+    try {
+      const res = await fetch("/api/integrations/gradescope", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ connected: next }),
+      });
+      const result = await res.json();
+      if (!result.success) {
+        throw new Error(result.error ?? "Failed to update Gradescope status");
+      }
+      setGradescopeConnected(next);
+      showToast(next ? "added to gradescope waitlist" : "removed from waitlist");
+    } catch {
+      showToast("couldn't update gradescope status");
     }
   }
 
@@ -554,24 +590,14 @@ export default function DashboardApp({
                 <div className="app-icon">GS</div>
                 <div>
                   <b>Gradescope</b>
-                  <p>Deadlines and autograder results.</p>
+                  <p>Coming soon: Gradescope data sync.</p>
                 </div>
                 <button
                   type="button"
                   className={`connect${gradescopeConnected ? " connected" : ""}`}
-                  onClick={() => {
-                    setGradescopeConnected((prev) => {
-                      const next = !prev;
-                      showToast(
-                        next
-                          ? "integration connected"
-                          : "integration disconnected",
-                      );
-                      return next;
-                    });
-                  }}
+                  onClick={handleGradescopeToggle}
                 >
-                  {gradescopeConnected ? "connected" : "connect"}
+                  {gradescopeConnected ? "added" : "join waitlist"}
                 </button>
               </div>
               <div className="integration">
@@ -600,7 +626,17 @@ export default function DashboardApp({
                   {copied ? "copied ✓" : "copy"}
                 </button>
               </div>
-              <button type="button" className="open-store">
+              <button
+                type="button"
+                className="open-store"
+                onClick={() =>
+                  window.open(
+                    "https://chromewebstore.google.com/detail/Iris%20for%20Canvas/dinnphngemkaeiflfgcjccpnlcboodmc",
+                    "_blank",
+                    "noopener,noreferrer",
+                  )
+                }
+              >
                 open Chrome Web Store ↗
               </button>
               <div className="secure">
@@ -715,6 +751,18 @@ export default function DashboardApp({
               <div className="tone-choice">
                 <button
                   type="button"
+                  data-tone="nice"
+                  className={irisTone === "nice" ? "active" : ""}
+                  onClick={() => {
+                    setIrisTone("nice");
+                    saveSettings({ irisTone: "nice" });
+                  }}
+                >
+                  <b>nice</b>
+                  <small>Calm and supportive. No profanity.</small>
+                </button>
+                <button
+                  type="button"
                   data-tone="friend"
                   className={irisTone === "friend" ? "active" : ""}
                   onClick={() => {
@@ -814,7 +862,13 @@ export default function DashboardApp({
                   <button
                     type="button"
                     className={`toggle${briefingEnabled ? " on" : ""}`}
-                    onClick={() => setBriefingEnabled((prev) => !prev)}
+                    onClick={() =>
+                      setBriefingEnabled((prev) => {
+                        const next = !prev;
+                        saveSettings({ briefingEnabled: next });
+                        return next;
+                      })
+                    }
                   >
                     <i aria-hidden="true" />
                   </button>
@@ -842,7 +896,13 @@ export default function DashboardApp({
                   <button
                     type="button"
                     className={`toggle${deadlineInterventions ? " on" : ""}`}
-                    onClick={() => setDeadlineInterventions((prev) => !prev)}
+                    onClick={() =>
+                      setDeadlineInterventions((prev) => {
+                        const next = !prev;
+                        saveSettings({ deadlineInterventions: next });
+                        return next;
+                      })
+                    }
                   >
                     <i aria-hidden="true" />
                   </button>
@@ -855,7 +915,13 @@ export default function DashboardApp({
                   <button
                     type="button"
                     className={`toggle${lowStakes ? " on" : ""}`}
-                    onClick={() => setLowStakes((prev) => !prev)}
+                    onClick={() =>
+                      setLowStakes((prev) => {
+                        const next = !prev;
+                        saveSettings({ lowStakesReminders: next });
+                        return next;
+                      })
+                    }
                   >
                     <i aria-hidden="true" />
                   </button>

@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
 
     const { data: users, error: usersError } = await supabase
       .from("users")
-      .select("id, briefing_time")
+      .select("id, briefing_time, briefing_enabled")
       .eq("onboarding_complete", true);
 
     if (usersError) {
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
 
     const matchingUsers = (users ?? []).filter((user) => {
       const hour = getBriefingHour(user.briefing_time ?? "");
-      return hour === currentHour;
+      return hour === currentHour && user.briefing_enabled === true;
     });
 
     let processed = 0;
