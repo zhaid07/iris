@@ -33,3 +33,30 @@ export function briefingTimeMatchesNow(
 
   return configuredHour === getBriefingHourInTimezone(date, timeZone);
 }
+
+export function formatNowInTimezone(
+  date: Date = new Date(),
+  timeZone: string = BRIEFING_TIMEZONE,
+): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  }).format(date);
+}
+
+export function buildNowContextBlock(
+  date: Date = new Date(),
+  timeZone: string = BRIEFING_TIMEZONE,
+): string {
+  const nowLabel = formatNowInTimezone(date, timeZone);
+  const iso = date.toISOString();
+
+  return `\n\nCURRENT DATE AND TIME: ${nowLabel} (${iso} UTC).
+Treat this as "now" for every deadline, email recency check, calendar conflict, and urgency calculation.`;
+}

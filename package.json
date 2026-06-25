@@ -9,17 +9,18 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.105.0",
     "@clerk/nextjs": "^6.39.5",
     "@clerk/themes": "^2.4.57",
     "@supabase/supabase-js": "^2.108.2",
     "next": "14.2.35",
+    "pdf-parse": "^2.4.5",
     "react": "^18",
     "react-dom": "^18",
     "twilio": "^6.0.2"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/pdf-parse": "^1.1.5",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",

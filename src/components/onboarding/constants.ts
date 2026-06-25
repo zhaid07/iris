@@ -89,7 +89,7 @@ export const CLASS_DAYS: { id: ClassDay; label: string }[] = [
   { id: "sun", label: "Sun" },
 ];
 
-export type IrisTone = "friend" | "unhinged";
+export type IrisTone = "nice" | "unhinged";
 
 export const TONE_OPTIONS: {
   id: IrisTone;
@@ -99,8 +99,8 @@ export const TONE_OPTIONS: {
   sample: string;
 }[] = [
   {
-    id: "friend",
-    label: "friend",
+    id: "nice",
+    label: "nice",
     title: "Straight up. Funny. No cussing.",
     description:
       "Sounds human and keeps you honest without swearing at you.",

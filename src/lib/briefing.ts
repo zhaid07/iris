@@ -2,7 +2,7 @@
 
 import {
   generateBriefing,
-  splitBriefingOutput,
+  normalizeBriefingOutput,
   type BriefingData,
 } from "@/lib/ai";
 import { fetchCanvasData } from "@/lib/canvas";
@@ -143,14 +143,11 @@ export async function generateBriefingForUser(userId: string): Promise<void> {
       throw new Error(`Failed to generate briefing: ${error instanceof Error ? error.message : String(error)}`);
     }
 
-    const { dashboard: briefingText, sms: smsText } =
-      splitBriefingOutput(fullBriefing);
+    const briefingText = normalizeBriefingOutput(fullBriefing);
 
     const hasPhone = Boolean(user.phone_number?.trim());
 
-    if (hasPhone && smsText) {
-      await sendBriefing(user.phone_number!, smsText.slice(0, 300));
-    } else if (hasPhone) {
+    if (hasPhone) {
       await sendBriefing(user.phone_number!, briefingText);
     }
 

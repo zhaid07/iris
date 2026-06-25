@@ -28,7 +28,11 @@ const ALLOWED_STRESSORS = [
   "the_future",
 ];
 
-const ALLOWED_TONES = ["friend", "unhinged"];
+function normalizeIrisTone(tone: string): string | null {
+  if (tone === "friend" || tone === "nice") return "nice";
+  if (tone === "unhinged") return "unhinged";
+  return null;
+}
 
 const ALLOWED_EMAIL_PRIORITIES = [
   "professors_tas",
@@ -83,8 +87,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (typeof body.irisTone === "string" && ALLOWED_TONES.includes(body.irisTone)) {
-      update.iris_tone = body.irisTone;
+    if (typeof body.irisTone === "string") {
+      const tone = normalizeIrisTone(body.irisTone);
+      if (tone) {
+        update.iris_tone = tone;
+      }
     }
 
     if (typeof body.contextBio === "string") {

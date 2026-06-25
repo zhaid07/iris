@@ -1,12 +1,14 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
+import { getGrokModel, grokChatCompletion } from "@/lib/grok";
+import { extractPdfText } from "@/lib/pdf";
 import { createServerClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
 const MAX_PDF_BYTES = 10 * 1024 * 1024;
+const MAX_SYLLABUS_TEXT_CHARS = 50_000;
 
 const EXTRACT_PROMPT = `Extract the following from this course syllabus as JSON:
 {
@@ -28,16 +30,6 @@ interface ParsedSyllabus {
   professor_email?: string | null;
 }
 
-function getAnthropicClient(): Anthropic {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-
-  if (!apiKey || apiKey === "YOUR_VALUE_HERE") {
-    throw new Error("ANTHROPIC_API_KEY missing or invalid");
-  }
-
-  return new Anthropic({ apiKey });
-}
-
 function parseSyllabusJson(text: string): ParsedSyllabus | null {
   const trimmed = text.trim();
 
@@ -54,13 +46,6 @@ function parseSyllabusJson(text: string): ParsedSyllabus | null {
     }
     return null;
   }
-}
-
-function extractTextContent(
-  content: Anthropic.Messages.Message["content"],
-): string | null {
-  const textBlock = content.find((block) => block.type === "text");
-  return textBlock?.type === "text" ? textBlock.text : null;
 }
 
 export async function POST(req: NextRequest) {
@@ -127,38 +112,27 @@ export async function POST(req: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const base64 = buffer.toString("base64");
 
     let parsed: ParsedSyllabus | null = null;
 
     try {
-      const client = getAnthropicClient();
-      const response = await client.messages.create({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 1024,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "document",
-                source: {
-                  type: "base64",
-                  media_type: "application/pdf",
-                  data: base64,
-                },
-              },
-              {
-                type: "text",
-                text: EXTRACT_PROMPT,
-              },
-            ],
-          },
-        ],
-      });
+      const syllabusText = (await extractPdfText(buffer)).slice(
+        0,
+        MAX_SYLLABUS_TEXT_CHARS,
+      );
 
-      const text = extractTextContent(response.content);
-      if (text) {
+      if (syllabusText) {
+        const text = await grokChatCompletion({
+          messages: [
+            {
+              role: "user",
+              content: `${EXTRACT_PROMPT}\n\nSYLLABUS TEXT:\n${syllabusText}`,
+            },
+          ],
+          maxTokens: 1024,
+          model: getGrokModel("fast"),
+        });
+
         parsed = parseSyllabusJson(text);
       }
     } catch (error) {
