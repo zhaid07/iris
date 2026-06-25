@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import {
+  BRIEFING_TIMEZONE,
+  briefingTimeMatchesNow,
+} from "@/lib/briefing-schedule";
 import { generateBriefingForUser } from "@/lib/briefing";
 import { createServerClient } from "@/lib/supabase";
 
@@ -26,11 +30,6 @@ function isAuthorized(req: NextRequest): boolean {
   return false;
 }
 
-function getBriefingHour(briefingTime: string): number | null {
-  const hour = parseInt(briefingTime.split(":")[0], 10);
-  return Number.isNaN(hour) ? null : hour;
-}
-
 export async function GET(req: NextRequest) {
   try {
     if (!isAuthorized(req)) {
@@ -41,11 +40,11 @@ export async function GET(req: NextRequest) {
     }
 
     const supabase = createServerClient();
-    const currentHour = new Date().getUTCHours();
+    const now = new Date();
 
     const { data: users, error: usersError } = await supabase
       .from("users")
-      .select("id, briefing_time, briefing_enabled")
+      .select("id, briefing_time, briefing_enabled, timezone")
       .eq("onboarding_complete", true);
 
     if (usersError) {
@@ -57,8 +56,12 @@ export async function GET(req: NextRequest) {
     }
 
     const matchingUsers = (users ?? []).filter((user) => {
-      const hour = getBriefingHour(user.briefing_time ?? "");
-      return hour === currentHour && user.briefing_enabled === true;
+      if (user.briefing_enabled !== true) {
+        return false;
+      }
+
+      const timeZone = user.timezone ?? BRIEFING_TIMEZONE;
+      return briefingTimeMatchesNow(user.briefing_time ?? "", now, timeZone);
     });
 
     let processed = 0;

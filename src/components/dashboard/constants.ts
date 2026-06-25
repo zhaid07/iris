@@ -27,20 +27,17 @@ export const SUGGESTIONS = [
 ] as const;
 
 export const BRIEFING_TIME_OPTIONS = [
-  { label: "7:00 AM", value: "07:00" },
-  { label: "8:00 AM", value: "08:00" },
-  { label: "9:00 AM", value: "09:00" },
   { label: "10:00 AM", value: "10:00" },
 ] as const;
 
 export function formatBriefingTime(time: string): string {
   const match = BRIEFING_TIME_OPTIONS.find((option) => option.value === time);
-  return match?.label ?? "9:00 AM";
+  return match?.label ?? "10:00 AM";
 }
 
 export function briefingLabelToValue(label: string): string {
   const match = BRIEFING_TIME_OPTIONS.find((option) => option.label === label);
-  return match?.value ?? "09:00";
+  return match?.value ?? "10:00";
 }
 
 export function getInitials(name: string): string {

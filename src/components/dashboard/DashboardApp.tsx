@@ -829,7 +829,10 @@ export default function DashboardApp({
             <section className="settings-section">
               <div className="section-copy">
                 <b>Briefing</b>
-                <p>Choose when Iris sends your one prioritized morning message.</p>
+                <p>
+                  Choose when Iris sends your one prioritized morning message.
+                  More times coming soon.
+                </p>
               </div>
               <div className="section-fields">
                 <div className="field-grid">
@@ -839,6 +842,7 @@ export default function DashboardApp({
                       className="select-field"
                       id="setting-time"
                       value={briefingTimeLabel}
+                      disabled
                       onChange={(event) => {
                         setBriefingTimeLabel(event.target.value);
                         saveSettings({

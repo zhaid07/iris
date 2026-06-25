@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   clerk_id text UNIQUE NOT NULL,
   email text NOT NULL,
   phone_number text,
-  briefing_time text DEFAULT '08:00',
+  briefing_time text DEFAULT '10:00',
   timezone text DEFAULT 'America/Los_Angeles',
   display_name text,
   major text,

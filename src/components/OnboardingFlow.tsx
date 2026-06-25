@@ -11,8 +11,6 @@ import { useRouter } from "next/navigation";
 
 import OnboardingShell from "@/components/onboarding/OnboardingShell";
 import {
-  BRIEFING_OPTIONS,
-  briefingChoiceToTime,
   CLASS_DAYS,
   EMAIL_PRIORITY_OPTIONS,
   getDogMessage,
@@ -22,13 +20,13 @@ import {
   stressorSelectionHint,
   TONE_OPTIONS,
   WALKTHROUGH_STEPS,
-  type BriefingChoice,
   type ClassDay,
   type EmailPriorityId,
   type IrisTone,
   type Major,
   type StressorId,
 } from "@/components/onboarding/constants";
+import { DEFAULT_BRIEFING_TIME } from "@/lib/briefing-schedule";
 
 interface OnboardingFlowProps {
   irisUserId: string;
@@ -55,8 +53,6 @@ interface OnboardingData {
   classDays: ClassDay[];
   scheduleContext: string;
   syllabusFiles: SyllabusFileItem[];
-  briefingChoice: BriefingChoice | "";
-  customBriefingTime: string;
 }
 
 export default function OnboardingFlow({
@@ -80,8 +76,6 @@ export default function OnboardingFlow({
     classDays: [],
     scheduleContext: "",
     syllabusFiles: [],
-    briefingChoice: "",
-    customBriefingTime: "08:00",
   });
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -813,55 +807,22 @@ export default function OnboardingFlow({
             grind.&rdquo;
           </p>
           <div className="time-grid">
-            {BRIEFING_OPTIONS.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                className={`time${
-                  data.briefingChoice === option.id ? " selected" : ""
-                }`}
-                onClick={() =>
-                  setData((prev) => ({
-                    ...prev,
-                    briefingChoice: option.id,
-                  }))
-                }
-              >
-                <span>{option.label}</span>
-                <small>{option.subtitle}</small>
-              </button>
-            ))}
+            <button type="button" className="time selected" disabled>
+              <span>10am</span>
+              <small>pst</small>
+            </button>
           </div>
-          <div
-            className={`custom-time${
-              data.briefingChoice === "custom" ? " visible" : ""
-            }`}
-          >
-            <input
-              type="time"
-              aria-label="Custom briefing time"
-              value={data.customBriefingTime}
-              onChange={(event) =>
-                setData((prev) => ({
-                  ...prev,
-                  customBriefingTime: event.target.value,
-                }))
-              }
-            />
-          </div>
+          <p className="note">more times coming soon</p>
           <div className="actions">
-            <span className="selection-count">pick a time</span>
+            <span className="selection-count">10:00 am pacific</span>
             <button
               type="button"
               className="primary"
-              disabled={loading || !data.briefingChoice}
+              disabled={loading}
               onClick={() =>
                 goNext(
                   {
-                    briefingTime: briefingChoiceToTime(
-                      data.briefingChoice as BriefingChoice,
-                      data.customBriefingTime,
-                    ),
+                    briefingTime: DEFAULT_BRIEFING_TIME,
                   },
                   11,
                 )

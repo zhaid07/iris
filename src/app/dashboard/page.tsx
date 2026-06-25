@@ -85,7 +85,7 @@ export default async function DashboardPage() {
       irisTone={user.iris_tone ?? "unhinged"}
       contextBio={user.context_bio ?? ""}
       fearContext={user.fear_context ?? ""}
-      briefingTime={user.briefing_time ?? "09:00"}
+      briefingTime={user.briefing_time ?? "10:00"}
       briefingEnabled={user.briefing_enabled ?? true}
       deadlineInterventions={user.deadline_interventions ?? true}
       lowStakesReminders={user.low_stakes_reminders ?? false}
