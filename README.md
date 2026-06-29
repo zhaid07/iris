@@ -1,36 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Iris — AI Student Productivity Assistant
 
-## Getting Started
+Iris is an AI-powered academic assistant that reads your Canvas courses, assignments, and announcements, then sends you a daily morning text with exactly what you need to know. No noise. Just what matters.
 
-First, run the development server:
+This is a personal project I'm working on.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Why I'm building it
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+I noticed it's easy to get mixed around or confused when you're juggling a lot of classes scattered over many different websites — Canvas, email, your calendar, syllabus PDFs. Things slip through the cracks. Iris pulls all of that into one place so you can stop hunting for what's due and just focus on doing it.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## What it does
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Syncs Canvas data via a Chrome extension using your existing browser session
+- Generates a personalized daily briefing using xAI Grok
+- Texts you every morning at your chosen time via Twilio SMS
+- Lets you ask questions about your schedule and deadlines from the dashboard
+- Learns your priorities, stressors, and tone from onboarding
 
-## Learn More
+## What it uses
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Auth**: Clerk
+- **Database**: Supabase (PostgreSQL)
+- **AI**: xAI Grok
+- **SMS**: Twilio
+- **Styling**: Tailwind CSS
+- **Chrome Extension**: Manifest V3
+- **Deployment**: Vercel
